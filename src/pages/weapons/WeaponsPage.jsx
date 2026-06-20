@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import { Crosshair, Plus } from 'lucide-react'
+import { useAuth } from '../../context/AuthContext'
+import { Crosshair, Plus, Pencil, Trash2 } from 'lucide-react'
 import { PageHeader, Modal, Field, Select, Spinner, Empty } from '../../components/ui'
 
 const WEAPONS = ['ANI M4','AKM','Utopia','Utopia Glock','Kilo','LWRC M61C','Pistol MK2/Pistol','Automatic Pistol','Desert Eagle']
@@ -8,9 +9,13 @@ const LOCKERS = { 'ANI M4':'1','AKM':'2','Utopia':'3-8','Utopia Glock':'9-10','K
 const BLANK = { log_date:new Date().toISOString().split('T')[0], weapon_type:'ANI M4', qty_transported:0, locker_number:'', confiscated_count:0, in_locker_count:0, logged_by:'', meeting_ref:'', notes:'' }
 
 export default function WeaponsPage() {
+  const { isFTI, isFTC } = useAuth()
   const [logs, setLogs]     = useState([])
   const [loading, setLoading] = useState(true)
   const [modal, setModal]   = useState(false)
+  const [editId, setEditId] = useState(null)
+  const [delModal, setDelModal] = useState(false)
+  const [delTarget, setDelTarget] = useState(null)
   const [form, setForm]     = useState(BLANK)
   const [saving, setSaving] = useState(false)
   const f = (k,v) => setForm(p=>({...p,[k]:v}))
@@ -29,16 +34,31 @@ export default function WeaponsPage() {
   }
   useEffect(() => { load() }, [])
 
+  function openAdd() { setForm(BLANK); setEditId(null); setModal(true) }
+  function openEdit(l) { setForm({...l}); setEditId(l.id); setModal(true) }
+
   async function save() {
     setSaving(true)
-    await supabase.from('weapon_log').insert({ ...form, qty_transported:parseInt(form.qty_transported)||0, confiscated_count:parseInt(form.confiscated_count)||0, in_locker_count:parseInt(form.in_locker_count)||0 })
+    const payload = { ...form, qty_transported:parseInt(form.qty_transported)||0, confiscated_count:parseInt(form.confiscated_count)||0, in_locker_count:parseInt(form.in_locker_count)||0 }
+    if (editId) {
+      const { id, created_at, ...rest } = payload
+      await supabase.from('weapon_log').update(rest).eq('id', editId)
+    } else {
+      await supabase.from('weapon_log').insert(payload)
+    }
     setSaving(false); setModal(false); load()
+  }
+
+  async function deleteLog() {
+    if (!delTarget) return
+    await supabase.from('weapon_log').delete().eq('id', delTarget.id)
+    setDelModal(false); setDelTarget(null); load()
   }
 
   return (
     <div className="max-w-6xl mx-auto space-y-5">
       <PageHeader icon={Crosshair} title="Weapon Log" sub="Transport log and locker inventory"
-        action={<button onClick={()=>{ setForm(BLANK); setModal(true)}} className="btn-primary"><Plus className="w-4 h-4"/>Log entry</button>}
+        action={<button onClick={openAdd} className="btn-primary"><Plus className="w-4 h-4"/>Log entry</button>}
       />
 
       {/* Locker inventory */}
@@ -67,7 +87,7 @@ export default function WeaponsPage() {
         {loading ? <div className="p-12 flex justify-center"><Spinner className="w-6 h-6"/></div>
         : logs.length===0 ? <Empty icon={Crosshair} title="No log entries" desc="Log weapon transports using the button above."/>
         : <table className="tbl">
-            <thead><tr><th>Date</th><th>Weapon</th><th>Qty transported</th><th>Locker</th><th>Confiscated</th><th>In locker</th><th>Logged by</th><th>Meeting ref</th></tr></thead>
+            <thead><tr><th>Date</th><th>Weapon</th><th>Qty transported</th><th>Locker</th><th>Confiscated</th><th>In locker</th><th>Logged by</th><th>Meeting ref</th>{isFTI && <th>Actions</th>}</tr></thead>
             <tbody>
               {logs.map(l => (
                 <tr key={l.id}>
@@ -79,6 +99,12 @@ export default function WeaponsPage() {
                   <td className="font-mono text-xs text-green-400">{l.in_locker_count||'—'}</td>
                   <td className="text-xs text-g-muted">{l.logged_by||'—'}</td>
                   <td className="text-xs text-g-muted">{l.meeting_ref||'—'}</td>
+                  {isFTI && <td>
+                    <div className="flex items-center gap-1">
+                      <button onClick={()=>openEdit(l)} className="text-xs px-2 py-1 rounded border border-n-600 text-a-400 hover:bg-a-500/10 transition-colors" title="Edit"><Pencil className="w-3 h-3"/></button>
+                      {isFTC && <button onClick={()=>{setDelTarget(l);setDelModal(true)}} className="text-xs px-2 py-1 rounded border border-n-600 text-red-400 hover:bg-red-900/20 transition-colors" title="Delete"><Trash2 className="w-3 h-3"/></button>}
+                    </div>
+                  </td>}
                 </tr>
               ))}
             </tbody>
@@ -86,7 +112,7 @@ export default function WeaponsPage() {
         }
       </div>
 
-      <Modal open={modal} onClose={()=>setModal(false)} title="New weapon log entry">
+      <Modal open={modal} onClose={()=>setModal(false)} title={editId ? 'Edit weapon log entry' : 'New weapon log entry'}>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <Field label="Date"><input type="date" value={form.log_date} onChange={e=>f('log_date',e.target.value)} className="inp"/></Field>
@@ -106,7 +132,18 @@ export default function WeaponsPage() {
         </div>
         <div className="flex gap-3 mt-5 justify-end">
           <button onClick={()=>setModal(false)} className="btn-ghost">Cancel</button>
-          <button onClick={save} disabled={saving} className="btn-primary">{saving?'Saving…':'Log entry'}</button>
+          <button onClick={save} disabled={saving} className="btn-primary">{saving?'Saving…': editId ? 'Save changes' : 'Log entry'}</button>
+        </div>
+      </Modal>
+
+      <Modal open={delModal} onClose={()=>setDelModal(false)} title="Delete log entry">
+        <div className="p-4 bg-red-900/20 border border-red-700/30 rounded-lg">
+          <p className="text-sm text-red-300 font-medium mb-1">This action cannot be undone.</p>
+          <p className="text-sm text-g-sub">Delete the <strong className="text-g-text">{delTarget?.weapon_type}</strong> log entry from {delTarget?.log_date}?</p>
+        </div>
+        <div className="flex gap-3 mt-5 justify-end">
+          <button onClick={()=>setDelModal(false)} className="btn-ghost">Cancel</button>
+          <button onClick={deleteLog} className="text-sm px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition-colors">Delete</button>
         </div>
       </Modal>
     </div>

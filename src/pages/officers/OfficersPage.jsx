@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
-import { Users, Search, Plus, Download } from 'lucide-react'
+import { Users, Search, Plus, Download, Pencil, Trash2 } from 'lucide-react'
 import { PageHeader, StatusBadge, Select, Modal, Field, Spinner, Empty } from '../../components/ui'
 
 const RANKS = ['All','Chief Of Police','DGP','ADGP','Commissioner','DIG','IG','SP','DYSP','CI','SI','ASI','HC','CPO','PO']
@@ -34,7 +34,7 @@ function getNextPromotion(rank) {
 const BLANK = { name:'',rank:'CPO',designation:'',badge_no:'',discord_id:'',status:'ACTIVE',remarks:'',total_duty_hrs:0,months_served:0,last_promotion_date:'',next_promotion:'' }
 
 export default function OfficersPage() {
-  const { isFTI } = useAuth()
+  const { isFTI, isFTC } = useAuth()
   const [officers, setOfficers] = useState([])
   const [filtered, setFiltered] = useState([])
   const [loading, setLoading]   = useState(true)
@@ -80,7 +80,15 @@ export default function OfficersPage() {
     setSaving(false); setModal(false); load()
   }
 
+  const [delModal, setDelModal] = useState(false)
+  const [delTarget, setDelTarget] = useState(null)
   const f = (k, v) => setForm(p => ({ ...p, [k]: v }))
+
+  async function deleteOfficer() {
+    if (!delTarget) return
+    await supabase.from('officers').delete().eq('id', delTarget.id)
+    setDelModal(false); setDelTarget(null); load()
+  }
 
   const counts = STATUS_OPTS.reduce((a,s) => { a[s]=officers.filter(o=>o.status===s).length; return a }, {})
 
@@ -145,7 +153,12 @@ export default function OfficersPage() {
                       ) : <span className="text-g-muted text-xs">—</span>}
                     </td>
                     <td className="text-xs text-g-muted max-w-[140px] truncate">{o.remarks ?? '—'}</td>
-                    {isFTI && <td><button onClick={()=>openEdit(o)} className="text-xs text-a-400 hover:underline">Edit</button></td>}
+                    {isFTI && <td>
+                      <div className="flex items-center gap-1">
+                        <button onClick={()=>openEdit(o)} className="text-xs px-2 py-1 rounded border border-n-600 text-a-400 hover:bg-a-500/10 transition-colors" title="Edit"><Pencil className="w-3 h-3"/></button>
+                        {isFTC && <button onClick={()=>{setDelTarget(o);setDelModal(true)}} className="text-xs px-2 py-1 rounded border border-n-600 text-red-400 hover:bg-red-900/20 transition-colors" title="Delete"><Trash2 className="w-3 h-3"/></button>}
+                      </div>
+                    </td>}
                   </tr>
                 ))}
               </tbody>
@@ -192,6 +205,17 @@ export default function OfficersPage() {
         <div className="flex gap-3 mt-5 justify-end">
           <button onClick={()=>setModal(false)} className="btn-ghost">Cancel</button>
           <button onClick={save} disabled={saving} className="btn-primary">{saving?<><Spinner className="w-4 h-4"/>Saving…</>:'Save officer'}</button>
+        </div>
+      </Modal>
+
+      <Modal open={delModal} onClose={()=>setDelModal(false)} title="Delete officer">
+        <div className="p-4 bg-red-900/20 border border-red-700/30 rounded-lg">
+          <p className="text-sm text-red-300 font-medium mb-1">This action cannot be undone.</p>
+          <p className="text-sm text-g-sub">Are you sure you want to delete <strong className="text-g-text">{delTarget?.name}</strong> ({delTarget?.badge_no})?</p>
+        </div>
+        <div className="flex gap-3 mt-5 justify-end">
+          <button onClick={()=>setDelModal(false)} className="btn-ghost">Cancel</button>
+          <button onClick={deleteOfficer} className="text-sm px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition-colors">Delete officer</button>
         </div>
       </Modal>
     </div>
