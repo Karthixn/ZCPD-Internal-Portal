@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import { DollarSign, Plus, ChevronDown, Pencil, Trash2, Settings } from 'lucide-react'
+import { DollarSign, Plus, ChevronDown, Pencil, Trash2, Settings, Download } from 'lucide-react'
+import * as XLSX from 'xlsx'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 import { PageHeader, Modal, Field, Select, Spinner, Empty } from '../../components/ui'
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
@@ -77,6 +80,48 @@ export default function SalaryPage() {
     setSaving(false); setRateModal(false)
   }
 
+  function exportRows() {
+    return entries.map((e, i) => ({
+      '#': i + 1,
+      Officer: e.officers?.name ?? '—',
+      Rank: e.officers?.rank ?? '—',
+      'Duty Hrs': e.duty_hrs || 0,
+      'Base Amount': e.base_amount || 0,
+      Auction: e.auction_amount || 0,
+      Bonus: e.bonus || 0,
+      Total: (e.base_amount || 0) + (e.auction_amount || 0) + (e.bonus || 0),
+      Notes: e.notes || '',
+    }))
+  }
+
+  function exportExcel() {
+    const rows = exportRows()
+    const ws = XLSX.utils.json_to_sheet(rows)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Salary')
+    XLSX.writeFile(wb, `ZCPD_Salary_${MONTHS[monthF - 1]}_${yearF}.xlsx`)
+  }
+
+  function exportPDF() {
+    const doc = new jsPDF('l', 'mm', 'a4')
+    doc.setFontSize(16)
+    doc.text(`ZCPD Salary Report — ${MONTHS[monthF - 1]} ${yearF}`, 14, 15)
+    doc.setFontSize(10)
+    doc.text(`Rate: ${hourlyRate.toLocaleString('en-IN')}/hr | Generated: ${new Date().toLocaleDateString()}`, 14, 22)
+
+    const rows = exportRows()
+    autoTable(doc, {
+      startY: 28,
+      head: [['#', 'Officer', 'Rank', 'Duty Hrs', 'Base Amount', 'Auction', 'Bonus', 'Total', 'Notes']],
+      body: rows.map(r => [r['#'], r.Officer, r.Rank, r['Duty Hrs'], r['Base Amount'].toLocaleString('en-IN'), r.Auction.toLocaleString('en-IN'), r.Bonus.toLocaleString('en-IN'), r.Total.toLocaleString('en-IN'), r.Notes]),
+      foot: [['', '', '', totalHrs.toFixed(2), '', '', '', totalPay.toLocaleString('en-IN'), '']],
+      theme: 'grid',
+      headStyles: { fillColor: [30, 41, 59] },
+      footStyles: { fillColor: [30, 41, 59], fontStyle: 'bold' },
+    })
+    doc.save(`ZCPD_Salary_${MONTHS[monthF - 1]}_${yearF}.pdf`)
+  }
+
   const totalPay = entries.reduce((a,e)=>(a+(e.base_amount||0)+(e.auction_amount||0)+(e.bonus||0)),0)
   const totalHrs = entries.reduce((a,e)=>a+(parseFloat(e.duty_hrs)||0),0)
 
@@ -85,6 +130,10 @@ export default function SalaryPage() {
       <PageHeader icon={DollarSign} title="Salary & Duty" sub="Monthly officer financials"
         action={<div className="flex gap-2">
           <button onClick={()=>{setRateInput(hourlyRate);setRateModal(true)}} className="btn-ghost"><Settings className="w-4 h-4"/>Rate: {fmt(hourlyRate)}/hr</button>
+          {entries.length > 0 && <>
+            <button onClick={exportExcel} className="btn-ghost"><Download className="w-4 h-4"/>Excel</button>
+            <button onClick={exportPDF} className="btn-ghost"><Download className="w-4 h-4"/>PDF</button>
+          </>}
           <button onClick={openAdd} className="btn-primary"><Plus className="w-4 h-4"/>Add entry</button>
         </div>}
       />
