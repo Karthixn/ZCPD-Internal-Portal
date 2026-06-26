@@ -3,73 +3,67 @@ import { supabase } from '../../lib/supabase'
 import { TrendingUp, Search } from 'lucide-react'
 import { PageHeader, Spinner, Empty } from '../../components/ui'
 
-const RANK_ORDER = ['Chief Of Police','DGP','ADGP','Commissioner','DIG','IG','SP','DYSP','CI','SI','ASI','HC','CPO','PO']
-const PROMO_STEPS = ['PO TO CPO','CPO TO HC','HC TO ASI','ASI TO SI','SI TO CI','CI TO DYSP','DYSP TO SP','SP TO DIG','DIG TO IG','IG TO COMMISSIONER']
-
 export default function PromotionHistoryPage() {
   const [records, setRecords] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [rankF, setRankF] = useState('All')
 
   useEffect(() => {
-    supabase.from('promotion_history').select('*').order('id')
-      .then(({ data }) => { setRecords(data ?? []); setLoading(false) })
+    supabase.from('promotion_history').select('*').order('promoted_date', { ascending: false })
+      .then(({ data }) => {
+        setRecords(data ?? [])
+        setLoading(false)
+      })
   }, [])
 
-  const shown = records.filter(r =>
-    (rankF === 'All' || r.current_rank === rankF) &&
-    (!search || r.officer_name?.toLowerCase().includes(search.toLowerCase()))
-  )
+  const grouped = {}
+  records.forEach(r => {
+    const name = r.notes || 'Unknown'
+    if (!grouped[name]) grouped[name] = []
+    grouped[name].push(r)
+  })
 
-  const ranks = ['All', ...new Set(records.map(r => r.current_rank).filter(Boolean))]
+  Object.values(grouped).forEach(arr => arr.sort((a, b) => {
+    const parse = d => { if (!d) return 0; const p = d.split('/'); return new Date(p[2], p[1]-1, p[0]).getTime() }
+    return parse(a.promoted_date) - parse(b.promoted_date)
+  }))
+
+  const officers = Object.entries(grouped).filter(([name]) =>
+    !search || name.toLowerCase().includes(search.toLowerCase())
+  )
 
   return (
     <div className="max-w-7xl mx-auto space-y-5">
-      <PageHeader icon={TrendingUp} title="Promotion History" sub="Complete promotion timeline of all officers"/>
+      <PageHeader icon={TrendingUp} title="Promotion History" sub={`${records.length} promotions across ${Object.keys(grouped).length} officers`}/>
 
-      <div className="flex gap-3 flex-wrap items-center">
-        <div className="relative max-w-xs flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-g-muted"/>
-          <input value={search} onChange={e => setSearch(e.target.value)} className="inp pl-9" placeholder="Search officer…"/>
-        </div>
-        <div className="flex gap-1.5 flex-wrap">
-          {ranks.map(r => (
-            <button key={r} onClick={() => setRankF(r)}
-              className={`text-xs font-medium px-3 py-1 rounded-full border transition-colors ${rankF === r ? 'bg-a-500/20 border-a-500/40 text-a-400' : 'bg-n-700 border-n-600 text-g-muted hover:text-g-text'}`}>
-              {r}
-            </button>
-          ))}
-        </div>
+      <div className="relative max-w-sm">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-g-muted"/>
+        <input value={search} onChange={e => setSearch(e.target.value)} className="inp pl-9" placeholder="Search officer…"/>
       </div>
 
       {loading ? <div className="flex justify-center py-12"><Spinner className="w-6 h-6"/></div>
-      : shown.length === 0 ? <Empty icon={TrendingUp} title="No records found" desc="No promotion history available."/>
-      : shown.map(r => (
-        <div key={r.id} className="card p-5">
+      : officers.length === 0 ? <Empty icon={TrendingUp} title="No records found" desc="No promotion history available."/>
+      : officers.map(([name, promos]) => (
+        <div key={name} className="card p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="font-semibold text-g-text text-base">{r.officer_name}</h3>
-              <span className="text-xs font-semibold text-a-400 bg-a-500/10 border border-a-500/20 px-2 py-0.5 rounded-full">{r.current_rank}</span>
+              <h3 className="font-semibold text-g-text text-base">{name}</h3>
+              <span className="text-xs text-g-muted">{promos.length} promotion{promos.length > 1 ? 's' : ''}</span>
             </div>
+            <span className="text-xs font-semibold text-a-400 bg-a-500/10 border border-a-500/20 px-2 py-0.5 rounded-full">
+              {promos[promos.length - 1]?.to_rank}
+            </span>
           </div>
           <div className="flex items-center gap-1 overflow-x-auto pb-2">
-            {PROMO_STEPS.map((step, i) => {
-              const date = r[`promo${i + 1}_date`]
-              const active = !!date
-              const isCurrent = i < PROMO_STEPS.length - 1 && r[`promo${i + 1}_date`] && !r[`promo${i + 2}_date`]
-              return (
-                <div key={step} className="flex items-center shrink-0">
-                  <div className={`flex flex-col items-center px-3 py-2 rounded-lg border min-w-[100px] ${
-                    active ? 'bg-green-900/20 border-green-700/30' : 'bg-n-800 border-n-600 opacity-40'
-                  } ${isCurrent ? 'ring-1 ring-a-500/40' : ''}`}>
-                    <span className={`text-[10px] font-bold uppercase ${active ? 'text-green-300' : 'text-g-muted'}`}>{step}</span>
-                    <span className={`text-xs mt-1 font-mono ${active ? 'text-g-text' : 'text-g-muted'}`}>{date || '—'}</span>
-                  </div>
-                  {i < PROMO_STEPS.length - 1 && <div className={`w-4 h-px mx-0.5 ${active ? 'bg-green-700' : 'bg-n-600'}`}/>}
+            {promos.map((p, i) => (
+              <div key={p.id} className="flex items-center shrink-0">
+                <div className="flex flex-col items-center px-3 py-2 rounded-lg border bg-green-900/20 border-green-700/30 min-w-[110px]">
+                  <span className="text-[10px] font-bold uppercase text-green-300">{p.from_rank} → {p.to_rank}</span>
+                  <span className="text-xs mt-1 font-mono text-g-text">{p.promoted_date || '—'}</span>
                 </div>
-              )
-            })}
+                {i < promos.length - 1 && <div className="w-4 h-px mx-0.5 bg-green-700"/>}
+              </div>
+            ))}
           </div>
         </div>
       ))}
