@@ -6,7 +6,7 @@ import { PageHeader, StatusBadge, Modal, Field, Select, Spinner, Empty } from '.
 
 const SQUADS = ['ALPHA','DELTA','BRAVO','CHARLIE']
 const SQUAD_COLORS = { ALPHA:'text-blue-400 bg-blue-900/20 border-blue-700/30', DELTA:'text-purple-400 bg-purple-900/20 border-purple-700/30', BRAVO:'text-green-400 bg-green-900/20 border-green-700/30', CHARLIE:'text-amber-400 bg-amber-900/20 border-amber-700/30' }
-const BLANK = { officer_id:'', squad:'ALPHA', badge_no:'', role:'member', discord_id:'', status:'ACTIVE' }
+const BLANK = { name:'', squad:'ALPHA', badge_no:'', role:'member', discord_id:'', status:'ACTIVE' }
 
 export default function SwatPage() {
   const { isFTI } = useAuth()
@@ -21,7 +21,7 @@ export default function SwatPage() {
   async function load() {
     setLoading(true)
     const [{ data: m }, { data: o }] = await Promise.all([
-      supabase.from('swat_members').select('*, officers(name,rank)').order('squad').order('badge_no'),
+      supabase.from('swat_members').select('*').order('squad').order('badge_no'),
       supabase.from('officers').select('id,name,badge_no,rank').order('name')
     ])
     setMembers(m ?? []); setOfficers(o ?? []); setLoading(false)
@@ -78,13 +78,12 @@ export default function SwatPage() {
               <div className="px-5 py-8 text-center text-g-muted text-sm">No members in this squad yet.</div>
             ) : (
               <table className="tbl">
-                <thead><tr><th>Badge</th><th>Name</th><th>Rank</th><th>Role</th><th>Discord ID</th><th>Status</th>{isFTI&&<th></th>}</tr></thead>
+                <thead><tr><th>Badge</th><th>Name</th><th>Role</th><th>Discord ID</th><th>Status</th>{isFTI&&<th></th>}</tr></thead>
                 <tbody>
                   {ms.map(m => (
                     <tr key={m.id}>
                       <td className="font-mono text-xs text-a-400">{m.badge_no}</td>
-                      <td className="font-medium text-g-text">{m.officers?.name ?? '—'}</td>
-                      <td className="text-g-sub text-xs">{m.officers?.rank ?? '—'}</td>
+                      <td className="font-medium text-g-text">{m.name || '—'}</td>
                       <td>{m.role === 'squad_leader' ? <span className="text-xs font-semibold text-yellow-300 bg-yellow-900/30 border border-yellow-700/30 px-2 py-0.5 rounded-full">Squad Leader</span> : <span className="text-xs text-g-muted">Member</span>}</td>
                       <td className="font-mono text-xs text-g-muted">{m.discord_id || '—'}</td>
                       <td><StatusBadge v={m.status}/></td>
@@ -100,12 +99,7 @@ export default function SwatPage() {
 
       <Modal open={modal} onClose={()=>setModal(false)} title={editId?'Edit SWAT member':'Add SWAT member'}>
         <div className="space-y-4">
-          <Field label="Officer" required>
-            <Select value={form.officer_id} onChange={e=>f('officer_id',e.target.value)}>
-              <option value="">Select officer…</option>
-              {officers.map(o => <option key={o.id} value={o.id}>{o.name} ({o.badge_no})</option>)}
-            </Select>
-          </Field>
+          <Field label="Name" required><input value={form.name} onChange={e=>f('name',e.target.value)} className="inp" placeholder="Officer name"/></Field>
           <div className="grid grid-cols-2 gap-4">
             <Field label="Squad">
               <Select value={form.squad} onChange={e=>f('squad',e.target.value)}>
