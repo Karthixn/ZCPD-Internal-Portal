@@ -23,10 +23,9 @@ export default function PromotionHistoryPage() {
     grouped[name].push(r)
   })
 
-  Object.values(grouped).forEach(arr => arr.sort((a, b) => {
-    const parse = d => { if (!d) return 0; const p = d.split('/'); return new Date(p[2], p[1]-1, p[0]).getTime() }
-    return parse(a.promoted_date) - parse(b.promoted_date)
-  }))
+  Object.values(grouped).forEach(arr => arr.sort((a, b) =>
+    new Date(a.promoted_date || 0) - new Date(b.promoted_date || 0)
+  ))
 
   const officers = Object.entries(grouped).filter(([name]) =>
     !search || name.toLowerCase().includes(search.toLowerCase())
@@ -59,7 +58,7 @@ export default function PromotionHistoryPage() {
               <div key={p.id} className="flex items-center shrink-0">
                 <div className="flex flex-col items-center px-3 py-2 rounded-lg border bg-green-900/20 border-green-700/30 min-w-[110px]">
                   <span className="text-[10px] font-bold uppercase text-green-300">{p.from_rank} → {p.to_rank}</span>
-                  <span className="text-xs mt-1 font-mono text-g-text">{p.promoted_date || '—'}</span>
+                  <span className="text-xs mt-1 font-mono text-g-text">{p.promoted_date ? new Date(p.promoted_date).toLocaleDateString('en-GB') : '—'}</span>
                 </div>
                 {i < promos.length - 1 && <div className="w-4 h-px mx-0.5 bg-green-700"/>}
               </div>
