@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { Settings, Plus, Users, Shield, AlertCircle, Pencil, Trash2 } from 'lucide-react'
 import { PageHeader, RoleBadge, Modal, Field, Select, Spinner, Empty, StatCard } from '../../components/ui'
 
-const ROLES = ['ftc','fti','fto','officer']
+const ROLES = ['ftc','fti','fto','swat','officer']
 const BLANK_USER = { email:'', password:'', role:'officer', officer_id:'' }
 
 export default function AdminPage() {
@@ -96,10 +96,11 @@ export default function AdminPage() {
       />
 
       {/* Role stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard icon={Shield}  label="FTC"     value={roleCounts.ftc}     color="text-rose-400"/>
         <StatCard icon={Shield}  label="FTI"     value={roleCounts.fti}     color="text-teal-400"/>
         <StatCard icon={Shield}  label="FTO"     value={roleCounts.fto}     color="text-amber-400"/>
+        <StatCard icon={Shield}  label="SWAT"    value={roleCounts.swat}    color="text-purple-400"/>
         <StatCard icon={Users}   label="Officers" value={roleCounts.officer} color="text-blue-400"/>
       </div>
 
@@ -147,7 +148,7 @@ export default function AdminPage() {
           <Field label="Temporary password" required><input type="password" value={form.password} onChange={e=>f('password',e.target.value)} className="inp" placeholder="Min 6 characters"/></Field>
           <Field label="Role">
             <Select value={form.role} onChange={e=>f('role',e.target.value)}>
-              {ROLES.map(r=><option key={r} value={r}>{r.toUpperCase()} — {r==='ftc'?'Full access':r==='fti'?'Monitors FTOs':r==='fto'?'Files cadet records':'Own profile only'}</option>)}
+              {ROLES.map(r=><option key={r} value={r}>{r.toUpperCase()} — {r==='ftc'?'Full access':r==='fti'?'Monitors FTOs':r==='fto'?'Files cadet records':r==='swat'?'SWAT records only':'Own profile only'}</option>)}
             </Select>
           </Field>
           <Field label="Link to officer">
@@ -169,7 +170,7 @@ export default function AdminPage() {
         <div className="space-y-4">
           <Field label="Role">
             <Select value={editForm.role} onChange={e=>ef('role',e.target.value)}>
-              {ROLES.map(r=><option key={r} value={r}>{r.toUpperCase()} — {r==='ftc'?'Full access':r==='fti'?'Monitors FTOs':r==='fto'?'Files cadet records':'Own profile only'}</option>)}
+              {ROLES.map(r=><option key={r} value={r}>{r.toUpperCase()} — {r==='ftc'?'Full access':r==='fti'?'Monitors FTOs':r==='fto'?'Files cadet records':r==='swat'?'SWAT records only':'Own profile only'}</option>)}
             </Select>
           </Field>
           <Field label="Link to officer">

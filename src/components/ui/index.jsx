@@ -6,7 +6,7 @@ export function StatusBadge({ v }) {
   if (!v) return <span className="text-g-muted text-xs">—</span>
   return <span className={SC[v] ?? 's-inactive'}>{v}</span>
 }
-const RC = { ftc:'r-ftc', fti:'r-fti', fto:'r-fto', officer:'r-officer' }
+const RC = { ftc:'r-ftc', fti:'r-fti', fto:'r-fto', swat:'r-swat', officer:'r-officer' }
 export function RoleBadge({ v }) {
   return <span className={RC[v] ?? 'r-officer'}>{v?.toUpperCase()}</span>
 }

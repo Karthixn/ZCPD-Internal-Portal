@@ -35,7 +35,7 @@ export default function App() {
 
           <Route path="/promotions" element={<L roles={['ftc','fti','fto']}><PromotionHistoryPage/></L>}/>
           <Route path="/officers"  element={<L roles={['ftc','fti','fto']}><OfficersPage/></L>}/>
-          <Route path="/swat"      element={<L roles={['ftc','fti','fto']}><SwatPage/></L>}/>
+          <Route path="/swat"      element={<L roles={['ftc','fti','fto','swat']}><SwatPage/></L>}/>
 
           {/* FTO portal with nested routes */}
           <Route path="/fto/*"     element={<L roles={['ftc','fti','fto']}><FTOPortal/></L>}/>

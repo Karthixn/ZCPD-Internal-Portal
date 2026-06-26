@@ -22,7 +22,7 @@ function NI({ to, icon: Icon, label, collapsed }) {
 }
 
 export default function AppLayout({ children }) {
-  const { profile, officer, role, signOut, isFTC, isFTI, isFTO } = useAuth()
+  const { profile, officer, role, signOut, isFTC, isFTI, isFTO, isSWAT } = useAuth()
   const navigate = useNavigate()
   const [col, setCol] = useState(false)
   const [mob, setMob] = useState(false)
@@ -31,7 +31,7 @@ export default function AppLayout({ children }) {
     { to:'/dashboard',  icon:Shield,        label:'Dashboard',    show:true },
     { to:'/officers',   icon:Users,         label:'Officers',     show:isFTO },
     { to:'/promotions', icon:TrendingUp,    label:'Promotions',   show:isFTO },
-    { to:'/swat',       icon:Target,        label:'S.W.A.T',      show:isFTO },
+    { to:'/swat',       icon:Target,        label:'S.W.A.T',      show:isFTO || isSWAT },
     { to:'/fto',        icon:GraduationCap, label:'FTO Portal',   show:isFTO },
     { to:'/records',    icon:FileText,      label:'Records',      show:isFTI },
     { to:'/weapons',    icon:Crosshair,     label:'Weapon Log',   show:isFTI },

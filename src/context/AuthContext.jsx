@@ -35,6 +35,7 @@ export function AuthProvider({ children }) {
   const isFTC   = role === 'ftc'
   const isFTI   = role === 'fti' || isFTC
   const isFTO   = role === 'fto' || isFTI
+  const isSWAT  = role === 'swat'
   const officer = profile?.officers ?? null
 
   async function signIn(email, password) {
@@ -46,7 +47,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <Ctx.Provider value={{ user, profile, officer, loading, role, isFTC, isFTI, isFTO, signIn, signOut }}>
+    <Ctx.Provider value={{ user, profile, officer, loading, role, isFTC, isFTI, isFTO, isSWAT, signIn, signOut }}>
       {children}
     </Ctx.Provider>
   )
