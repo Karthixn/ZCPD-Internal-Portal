@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams, Routes, Route } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
-import { GraduationCap, Plus, ChevronRight, User, FileText, ClipboardList, BookOpen, Search, CheckCircle, Lock, Clock, Edit3, Save } from 'lucide-react'
+import { GraduationCap, Plus, ChevronRight, User, FileText, ClipboardList, BookOpen, Search, CheckCircle, Lock, Clock, Edit3, Save, Trash2 } from 'lucide-react'
 import { PageHeader, StatusBadge, PhasePill, ScoreBar, Modal, Field, Select, Spinner, Empty } from '../../components/ui'
 
 /* ─── helpers ─── */
@@ -27,16 +27,28 @@ const CRITERIA = [
 ═══════════════════════════════ */
 function CadetList() {
   const navigate = useNavigate()
-  const { isFTO } = useAuth()
+  const { isFTO, isFTC } = useAuth()
   const [cadets, setCadets] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [statusF, setStatusF] = useState('All')
+  const [deleting, setDeleting] = useState(null)
 
-  useEffect(() => {
+  function loadCadets() {
     supabase.from('cadet_applications').select('*').order('created_at',{ascending:false})
       .then(({ data }) => { setCadets(data??[]); setLoading(false) })
-  }, [])
+  }
+  useEffect(() => { loadCadets() }, [])
+
+  async function deleteCadet(id) {
+    if (!confirm('Are you sure you want to delete this cadet record? This cannot be undone.')) return
+    setDeleting(id)
+    await supabase.from('fto_weekly_reports').delete().eq('cadet_id', id)
+    await supabase.from('po_test_results').delete().eq('cadet_id', id)
+    await supabase.from('cadet_applications').delete().eq('id', id)
+    setDeleting(null)
+    loadCadets()
+  }
 
   const shown = cadets.filter(c =>
     (statusF==='All' || c.status===statusF) &&
@@ -81,7 +93,13 @@ function CadetList() {
                   <td><PhasePill v={c.phase3_status}/></td>
                   <td><PhasePill v={c.po_test_status}/></td>
                   <td><StatusBadge v={c.status}/></td>
-                  <td><ChevronRight className="w-4 h-4 text-g-muted"/></td>
+                  <td className="flex items-center gap-1">
+                    {isFTC && <button onClick={e=>{e.stopPropagation();deleteCadet(c.id)}} disabled={deleting===c.id}
+                      className="p-1 rounded hover:bg-red-900/30 text-g-muted hover:text-red-400 transition-colors" title="Delete cadet">
+                      <Trash2 className={`w-3.5 h-3.5 ${deleting===c.id?'animate-spin':''}`}/>
+                    </button>}
+                    <ChevronRight className="w-4 h-4 text-g-muted"/>
+                  </td>
                 </tr>
               ))}
             </tbody>
