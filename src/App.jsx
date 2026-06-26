@@ -12,6 +12,7 @@ import WeaponsPage  from './pages/weapons/WeaponsPage'
 import SalaryPage   from './pages/salary/SalaryPage'
 import AdminPage    from './pages/admin/AdminPage'
 import SOPPage      from './pages/sop/SOPPage'
+import PromotionHistoryPage from './pages/promotions/PromotionHistoryPage'
 
 function L({ children, roles }) {
   return (
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="/dashboard" element={<L><Dashboard/></L>}/>
           <Route path="/sop"       element={<L><SOPPage/></L>}/>
 
+          <Route path="/promotions" element={<L roles={['ftc','fti','fto']}><PromotionHistoryPage/></L>}/>
           <Route path="/officers"  element={<L roles={['ftc','fti','fto']}><OfficersPage/></L>}/>
           <Route path="/swat"      element={<L roles={['ftc','fti','fto']}><SwatPage/></L>}/>
 

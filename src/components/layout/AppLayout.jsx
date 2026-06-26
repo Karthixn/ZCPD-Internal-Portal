@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import {
   Shield, Users, Target, BookOpen, FileText,
   DollarSign, Crosshair, Settings, LogOut,
-  GraduationCap, ChevronLeft, ChevronRight, Menu
+  GraduationCap, TrendingUp, ChevronLeft, ChevronRight, Menu
 } from 'lucide-react'
 import { RoleBadge } from '../ui'
 
@@ -30,6 +30,7 @@ export default function AppLayout({ children }) {
   const nav = [
     { to:'/dashboard',  icon:Shield,        label:'Dashboard',    show:true },
     { to:'/officers',   icon:Users,         label:'Officers',     show:isFTO },
+    { to:'/promotions', icon:TrendingUp,    label:'Promotions',   show:isFTO },
     { to:'/swat',       icon:Target,        label:'S.W.A.T',      show:isFTO },
     { to:'/fto',        icon:GraduationCap, label:'FTO Portal',   show:isFTO },
     { to:'/records',    icon:FileText,      label:'Records',      show:isFTI },
