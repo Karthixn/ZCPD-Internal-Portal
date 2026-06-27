@@ -9,7 +9,8 @@ const SQUAD_COLORS = { ALPHA:'text-blue-400 bg-blue-900/20 border-blue-700/30', 
 const BLANK = { name:'', squad:'ALPHA', badge_no:'', role:'member', discord_id:'', status:'ACTIVE' }
 
 export default function SwatPage() {
-  const { isFTI } = useAuth()
+  const { isFTI, isSWAT } = useAuth()
+  const canEdit = isFTI || isSWAT
   const [members, setMembers] = useState([])
   const [loading, setLoading] = useState(true)
   const [modal, setModal]     = useState(false)
@@ -45,7 +46,7 @@ export default function SwatPage() {
     <div className="max-w-6xl mx-auto space-y-5">
       <PageHeader icon={Target} title="S.W.A.T Roster"
         sub={`${members.length} members across ${SQUADS.length} squads`}
-        action={isFTI && <button onClick={openAdd} className="btn-primary"><Plus className="w-4 h-4"/>Add member</button>}
+        action={canEdit && <button onClick={openAdd} className="btn-primary"><Plus className="w-4 h-4"/>Add member</button>}
       />
 
       {/* Squad summary pills */}
@@ -78,7 +79,7 @@ export default function SwatPage() {
               <div className="px-5 py-8 text-center text-g-muted text-sm">No members in this squad yet.</div>
             ) : (
               <table className="tbl">
-                <thead><tr><th>Badge</th><th>Name</th><th>Role</th><th>Discord ID</th><th>Status</th>{isFTI&&<th></th>}</tr></thead>
+                <thead><tr><th>Badge</th><th>Name</th><th>Role</th><th>Discord ID</th><th>Status</th>{canEdit&&<th></th>}</tr></thead>
                 <tbody>
                   {ms.map(m => (
                     <tr key={m.id}>
@@ -87,7 +88,7 @@ export default function SwatPage() {
                       <td>{m.role === 'squad_leader' ? <span className="text-xs font-semibold text-yellow-300 bg-yellow-900/30 border border-yellow-700/30 px-2 py-0.5 rounded-full">Squad Leader</span> : <span className="text-xs text-g-muted">Member</span>}</td>
                       <td className="font-mono text-xs text-g-muted">{m.discord_id || '—'}</td>
                       <td><StatusBadge v={m.status}/></td>
-                      {isFTI && <td><button onClick={()=>openEdit(m)} className="text-xs text-a-400 hover:underline">Edit</button></td>}
+                      {canEdit && <td><button onClick={()=>openEdit(m)} className="text-xs text-a-400 hover:underline">Edit</button></td>}
                     </tr>
                   ))}
                 </tbody>
