@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
-import VideoPlayer from '../../components/ui/VideoPlayer'
-import { PageHeader, Modal, Field, Select, Spinner, Empty } from '../../components/ui'
+import { PageHeader, Modal, Field, Spinner, Empty } from '../../components/ui'
 import { PlayCircle, Plus, Pencil, Trash2, AlertCircle, Film } from 'lucide-react'
 
-const BUCKET = 'training-videos'
-const BLANK = { title: '', description: '', category: 'General', file: null }
+const BLANK = { title: '', description: '', category: 'General', youtube_url: '' }
 
-const publicUrl = (path) =>
-  supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl
+/* Extract the 11-char video id from any common YouTube URL form. */
+function ytId(url = '') {
+  const m = url.match(/(?:youtu\.be\/|v=|\/embed\/|\/shorts\/)([A-Za-z0-9_-]{11})/)
+  return m ? m[1] : (/^[A-Za-z0-9_-]{11}$/.test(url.trim()) ? url.trim() : null)
+}
+const embedUrl = (url) => `https://www.youtube-nocookie.com/embed/${ytId(url)}?rel=0&modestbranding=1`
+const thumbUrl = (url) => `https://img.youtube.com/vi/${ytId(url)}/mqdefault.jpg`
 
 export default function TrainingPage() {
   const { isFTI } = useAuth()          // isFTI is true for FTI and FTC
@@ -48,25 +51,20 @@ export default function TrainingPage() {
   }, [videos])
 
   function openNew()  { setTarget(null); setForm(BLANK); setErr(''); setModal(true) }
-  function openEdit(v){ setTarget(v); setForm({ title: v.title, description: v.description || '', category: v.category || 'General', file: null }); setErr(''); setModal(true) }
+  function openEdit(v){ setTarget(v); setForm({ title: v.title, description: v.description || '', category: v.category || 'General', youtube_url: v.youtube_url || '' }); setErr(''); setModal(true) }
 
   async function save() {
     setErr('')
     if (!form.title.trim()) { setErr('Title is required.'); return }
-    if (!target && !form.file) { setErr('Please choose a video file.'); return }
+    if (!ytId(form.youtube_url)) { setErr('Enter a valid YouTube link (e.g. https://youtu.be/… or https://www.youtube.com/watch?v=…).'); return }
     setSaving(true)
     try {
-      let storage_path = target?.storage_path
-      if (form.file) {
-        const ext  = form.file.name.split('.').pop()
-        const path = `${Date.now()}-${form.title.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40)}.${ext}`
-        const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, form.file, {
-          cacheControl: '3600', upsert: false, contentType: form.file.type,
-        })
-        if (upErr) throw upErr
-        storage_path = path
+      const row = {
+        title: form.title.trim(),
+        description: form.description.trim() || null,
+        category: form.category.trim() || 'General',
+        youtube_url: form.youtube_url.trim(),
       }
-      const row = { title: form.title.trim(), description: form.description.trim() || null, category: form.category.trim() || 'General', storage_path }
       const res = target
         ? await supabase.from('training_videos').update(row).eq('id', target.id)
         : await supabase.from('training_videos').insert(row)
@@ -82,7 +80,6 @@ export default function TrainingPage() {
 
   async function confirmDelete() {
     setSaving(true)
-    if (delTarget.storage_path) await supabase.storage.from(BUCKET).remove([delTarget.storage_path])
     await supabase.from('training_videos').delete().eq('id', delTarget.id)
     if (active?.id === delTarget.id) setActive(null)
     setDelTarget(null); setSaving(false)
@@ -98,14 +95,23 @@ export default function TrainingPage() {
       {loading ? (
         <div className="p-16 flex justify-center"><Spinner className="w-6 h-6" /></div>
       ) : videos.length === 0 ? (
-        <Empty icon={Film} title="No training videos yet" desc={canManage ? 'Use “Add video” to upload the first one.' : 'Check back soon — videos will appear here.'} />
+        <Empty icon={Film} title="No training videos yet" desc={canManage ? 'Use “Add video” to add the first one.' : 'Check back soon — videos will appear here.'} />
       ) : (
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Player */}
           <div className="flex-1 min-w-0">
             {active ? (
               <>
-                <VideoPlayer key={active.id} src={publicUrl(active.storage_path)} className="aspect-video w-full" />
+                <div className="aspect-video w-full rounded-xl overflow-hidden bg-black">
+                  <iframe
+                    key={active.id}
+                    src={embedUrl(active.youtube_url)}
+                    title={active.title}
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                    allowFullScreen
+                  />
+                </div>
                 <div className="mt-4 flex items-start justify-between gap-3">
                   <div>
                     <p className="text-[10px] font-bold text-a-400 uppercase tracking-wider mb-1">{active.category}</p>
@@ -133,12 +139,13 @@ export default function TrainingPage() {
                 <div className="space-y-1.5">
                   {vids.map(v => (
                     <button key={v.id} onClick={() => setActive(v)}
-                      className={`w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors border
+                      className={`w-full flex items-center gap-3 p-1.5 rounded-lg text-left transition-colors border
                         ${active?.id === v.id ? 'bg-a-500/15 border-a-500/25' : 'border-transparent hover:bg-white/5'}`}>
-                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${active?.id === v.id ? 'bg-a-500/25 text-a-400' : 'bg-n-700 text-g-muted'}`}>
-                        <PlayCircle className="w-4 h-4" />
+                      <div className="relative w-20 h-12 rounded-md overflow-hidden bg-n-700 shrink-0">
+                        <img src={thumbUrl(v.youtube_url)} alt="" className="w-full h-full object-cover" loading="lazy" />
+                        {active?.id === v.id && <div className="absolute inset-0 bg-a-500/25 flex items-center justify-center"><PlayCircle className="w-4 h-4 text-white" /></div>}
                       </div>
-                      <span className={`text-sm truncate ${active?.id === v.id ? 'text-a-400 font-medium' : 'text-g-sub'}`}>{v.title}</span>
+                      <span className={`text-sm leading-snug line-clamp-2 ${active?.id === v.id ? 'text-a-400 font-medium' : 'text-g-sub'}`}>{v.title}</span>
                     </button>
                   ))}
                 </div>
@@ -156,25 +163,24 @@ export default function TrainingPage() {
             <input value={form.category} onChange={e => f('category', e.target.value)} className="inp" placeholder="General" list="tv-cats" />
             <datalist id="tv-cats">{[...new Set(videos.map(v => v.category).filter(Boolean))].map(c => <option key={c} value={c} />)}</datalist>
           </Field>
-          <Field label="Description"><textarea value={form.description} onChange={e => f('description', e.target.value)} className="inp min-h-[80px] resize-y" placeholder="What this video covers…" /></Field>
-          <Field label={target ? 'Replace video file (optional)' : 'Video file'} required={!target}>
-            <input type="file" accept="video/*" onChange={e => f('file', e.target.files?.[0] || null)}
-              className="block w-full text-sm text-g-sub file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-a-500/15 file:text-a-400 file:text-sm file:cursor-pointer" />
-            {target && <p className="text-xs text-g-muted mt-1">Leave empty to keep the current video.</p>}
+          <Field label="YouTube link" required>
+            <input value={form.youtube_url} onChange={e => f('youtube_url', e.target.value)} className="inp" placeholder="https://youtu.be/… or https://www.youtube.com/watch?v=…" />
+            <p className="text-xs text-g-muted mt-1">Tip: set the video to <strong>Unlisted</strong> on YouTube so only this site links to it.</p>
           </Field>
+          <Field label="Description"><textarea value={form.description} onChange={e => f('description', e.target.value)} className="inp min-h-[80px] resize-y" placeholder="What this video covers…" /></Field>
           {err && <div className="flex items-center gap-2 bg-red-900/20 border border-red-700/40 rounded-lg px-3 py-2.5"><AlertCircle className="w-4 h-4 text-red-400 shrink-0" /><p className="text-red-400 text-sm">{err}</p></div>}
         </div>
         <div className="flex gap-3 mt-5 justify-end">
           <button onClick={() => setModal(false)} className="btn-ghost">Cancel</button>
-          <button onClick={save} disabled={saving} className="btn-primary">{saving ? 'Saving…' : target ? 'Save changes' : 'Upload video'}</button>
+          <button onClick={save} disabled={saving} className="btn-primary">{saving ? 'Saving…' : target ? 'Save changes' : 'Add video'}</button>
         </div>
       </Modal>
 
       {/* Delete modal */}
       <Modal open={!!delTarget} onClose={() => setDelTarget(null)} title="Delete video">
         <div className="p-4 bg-red-900/20 border border-red-700/30 rounded-lg mb-5">
-          <p className="text-sm text-red-300 font-medium mb-1">This action cannot be undone.</p>
-          <p className="text-sm text-g-sub">Permanently delete <strong className="text-g-text">{delTarget?.title}</strong> and its video file?</p>
+          <p className="text-sm text-red-300 font-medium mb-1">This removes it from the portal.</p>
+          <p className="text-sm text-g-sub">Remove <strong className="text-g-text">{delTarget?.title}</strong> from the training list? (The video stays on YouTube.)</p>
         </div>
         <div className="flex gap-3 justify-end">
           <button onClick={() => setDelTarget(null)} className="btn-ghost">Cancel</button>
