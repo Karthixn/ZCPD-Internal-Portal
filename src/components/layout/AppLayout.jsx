@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import {
   Shield, Users, Target, BookOpen, FileText,
   DollarSign, Crosshair, Settings, LogOut,
-  GraduationCap, TrendingUp, ChevronLeft, ChevronRight, Menu
+  GraduationCap, TrendingUp, ChevronLeft, ChevronRight, Menu, PlayCircle
 } from 'lucide-react'
 import { RoleBadge } from '../ui'
 
@@ -37,6 +37,7 @@ export default function AppLayout({ children }) {
     { to:'/weapons',    icon:Crosshair,     label:'Weapon Log',   show:isFTI },
     { to:'/salary',     icon:DollarSign,    label:'Salary & Duty',show:isFTC },
     { to:'/sop',        icon:BookOpen,      label:'SOP Library',  show:true  },
+    { to:'/training',   icon:PlayCircle,    label:'Training',     show:true  },
     { to:'/admin',      icon:Settings,      label:'Admin',        show:isFTC },
   ].filter(n => n.show)
 

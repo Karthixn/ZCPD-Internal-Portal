@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useAuth } from '../../context/AuthContext'
 import { BookOpen, ChevronRight, Shield, Users, Award, Star, Radio, Scale, Search, Crosshair, AlertTriangle, Eye, MapPin, FileText, Car, Siren, Target, Handshake, Lock, Megaphone, UserCheck, BadgeCheck } from 'lucide-react'
 
 /* ─── SOP Content Sections ─── */
@@ -763,48 +764,60 @@ const SOP_CONTENT = {
   },
 }
 
-/* ─── Sidebar Structure ─── */
+/* ─── Sidebar Structure ───
+   `pub:true` = visible on the public (logged-out) site.
+   Flip a flag here to change what unauthenticated visitors can read. */
 const SOP = [
   { cat:'Department', items:[
-    { key:'about-zcpd',              label:'About ZCPD' },
-    { key:'rank-structure',          label:'Rank Structure' },
-    { key:'promotion-criteria',      label:'Promotion Criteria' },
-    { key:'decorum',                 label:'Decorum' },
-    { key:'uniform-equipment',       label:'Uniform & Equipment' },
-    { key:'badge-number',            label:'Badge Number System' },
-    { key:'communication-protocol',  label:'Communication Protocol' },
+    { key:'about-zcpd',              label:'About ZCPD',              pub:true },
+    { key:'rank-structure',          label:'Rank Structure',          pub:true },
+    { key:'promotion-criteria',      label:'Promotion Criteria',      pub:true },
+    { key:'decorum',                 label:'Decorum',                 pub:true },
+    { key:'uniform-equipment',       label:'Uniform & Equipment',     pub:true },
+    { key:'badge-number',            label:'Badge Number System',     pub:true },
+    { key:'communication-protocol',  label:'Communication Protocol',  pub:true },
   ]},
   { cat:'Guidelines', items:[
-    { key:'g1-citizen-rights',       label:'G-1: Citizen Rights' },
-    { key:'g2-reasonable-suspicion', label:'G-2: Reasonable Suspicion' },
-    { key:'g3-use-of-force',        label:'G-3: Use of Force' },
-    { key:'g4-felony-misdemeanor',   label:'G-4: Felony & Misdemeanor' },
-    { key:'g5-undercover-ops',       label:'G-5: Undercover Ops' },
-    { key:'g6-redzone',              label:'G-6: Redzone Declaration' },
-    { key:'g7-warrant',              label:'G-7: Warrant Execution' },
-    { key:'g8-bolo',                 label:'G-8: BOLO' },
+    { key:'g1-citizen-rights',       label:'G-1: Citizen Rights',     pub:true },
+    { key:'g2-reasonable-suspicion', label:'G-2: Reasonable Suspicion', pub:true },
+    { key:'g3-use-of-force',        label:'G-3: Use of Force',        pub:true },
+    { key:'g4-felony-misdemeanor',   label:'G-4: Felony & Misdemeanor', pub:true },
+    { key:'g5-undercover-ops',       label:'G-5: Undercover Ops' },   /* internal */
+    { key:'g6-redzone',              label:'G-6: Redzone Declaration' }, /* internal */
+    { key:'g7-warrant',              label:'G-7: Warrant Execution',  pub:true },
+    { key:'g8-bolo',                 label:'G-8: BOLO',               pub:true },
   ]},
   { cat:'Protocols', items:[
-    { key:'patrolling',              label:'Patrolling' },
-    { key:'traffic-stop',            label:'Traffic Stop' },
-    { key:'pursuit',                 label:'Pursuit' },
-    { key:'pit-maneuver',            label:'PIT Maneuvering' },
-    { key:'arrest',                  label:'Arrest' },
-    { key:'evidence-securing',       label:'Evidence Securing' },
-    { key:'firearm-engagement',      label:'Firearm Engagement' },
-    { key:'crowd-control',           label:'Crowd Control' },
-    { key:'hostage-handling',        label:'Hostage Handling' },
-    { key:'code-99',                 label:'Code 99 Response' },
-    { key:'licensing-id',            label:'Licensing & ID' },
+    { key:'patrolling',              label:'Patrolling',              pub:true },
+    { key:'traffic-stop',            label:'Traffic Stop',            pub:true },
+    { key:'pursuit',                 label:'Pursuit',                 pub:true },
+    { key:'pit-maneuver',            label:'PIT Maneuvering' },       /* internal */
+    { key:'arrest',                  label:'Arrest',                  pub:true },
+    { key:'evidence-securing',       label:'Evidence Securing',       pub:true },
+    { key:'firearm-engagement',      label:'Firearm Engagement',      pub:true },
+    { key:'crowd-control',           label:'Crowd Control',           pub:true },
+    { key:'hostage-handling',        label:'Hostage Handling' },      /* internal */
+    { key:'code-99',                 label:'Code 99 Response',        pub:true },
+    { key:'licensing-id',            label:'Licensing & ID',          pub:true },
   ]},
 ]
 
 export default function SOPPage() {
+  const { user } = useAuth()
+  const publicMode = !user
+
+  // On the public site, only show sections flagged `pub`.
+  const sections = publicMode
+    ? SOP.map(s => ({ ...s, items: s.items.filter(i => i.pub) })).filter(s => s.items.length)
+    : SOP
+
   const [active, setActive] = useState(null)
-  const section = active ? SOP_CONTENT[active] : null
+  // Guard: never render an internal section in public mode.
+  const publicKeys = new Set(sections.flatMap(s => s.items.map(i => i.key)))
+  const section = active && (!publicMode || publicKeys.has(active)) ? SOP_CONTENT[active] : null
 
   return (
-    <div className="max-w-7xl mx-auto flex flex-col" style={{ height:'calc(100vh - 5rem)' }}>
+    <div className="max-w-7xl mx-auto flex flex-col px-4 sm:px-6 py-4 lg:py-6" style={{ height:'calc(100vh - 3.5rem)' }}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-a-500/15 border border-a-500/25 flex items-center justify-center">
@@ -817,7 +830,7 @@ export default function SOPPage() {
       <div className="flex gap-4 flex-1 min-h-0">
         {/* Sidebar */}
         <div className="w-60 shrink-0 card p-3 overflow-y-auto space-y-4">
-          {SOP.map(s => (
+          {sections.map(s => (
             <div key={s.cat}>
               <p className="text-[10px] font-bold text-g-muted uppercase tracking-wider px-2 mb-1.5">{s.cat}</p>
               {s.items.map(item => (
