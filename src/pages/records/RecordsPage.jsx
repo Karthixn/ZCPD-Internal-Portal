@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import { FileText, Plus, Search, ExternalLink } from 'lucide-react'
+import { FileText, Plus, Search, Eye, EyeOff, Globe } from 'lucide-react'
 import { PageHeader, Modal, Field, Select, Spinner, Empty } from '../../components/ui'
 
 const TYPES = ['All','Incident Report','Case File','Confiscation Report','Notice','SOP Document','Other']
-const BLANK = { title:'', type:'Incident Report', description:'', officer_name:'', incident_date:'', reference_no:'', tags:'' }
+const BLANK = { title:'', type:'Incident Report', description:'', officer_name:'', incident_date:'', reference_no:'', tags:'', is_public:false }
 
 export default function RecordsPage() {
   const [records, setRecords]   = useState([])
@@ -27,6 +27,11 @@ export default function RecordsPage() {
     setSaving(true)
     await supabase.from('records').insert(form)
     setSaving(false); setModal(false); load()
+  }
+
+  async function togglePublic(r) {
+    await supabase.from('records').update({ is_public: !r.is_public }).eq('id', r.id)
+    load()
   }
 
   const shown = records.filter(r =>
@@ -56,12 +61,13 @@ export default function RecordsPage() {
       : shown.length===0 ? <Empty icon={FileText} title="No records found" desc="Create the first record."/>
       : <div className="space-y-3">
           {shown.map(r => (
-            <div key={r.id} className="card p-5 hover:border-n-500 transition-colors cursor-pointer">
+            <div key={r.id} className="card p-5 hover:border-n-500 transition-colors">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${TYPE_COLORS[r.type]??TYPE_COLORS['Other']}`}>{r.type}</span>
                     {r.reference_no && <span className="font-mono text-xs text-g-muted">#{r.reference_no}</span>}
+                    {r.is_public && <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full border text-emerald-400 bg-emerald-900/20 border-emerald-700/30"><Globe className="w-3 h-3"/>Public</span>}
                   </div>
                   <h3 className="font-semibold text-g-text mb-1">{r.title}</h3>
                   <p className="text-sm text-g-muted line-clamp-2">{r.description}</p>
@@ -71,6 +77,10 @@ export default function RecordsPage() {
                     <span>· {new Date(r.created_at).toLocaleDateString()}</span>
                   </div>
                 </div>
+                <button onClick={()=>togglePublic(r)} title={r.is_public?'Hide from public blotter':'Show on public blotter'}
+                  className={`shrink-0 inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border transition-colors ${r.is_public?'text-emerald-400 border-emerald-700/40 hover:bg-emerald-900/20':'text-g-muted border-n-600 hover:text-g-text hover:bg-white/5'}`}>
+                  {r.is_public ? <><Eye className="w-3.5 h-3.5"/>Public</> : <><EyeOff className="w-3.5 h-3.5"/>Hidden</>}
+                </button>
               </div>
             </div>
           ))}
@@ -91,6 +101,11 @@ export default function RecordsPage() {
             <Field label="Incident date"><input type="date" value={form.incident_date} onChange={e=>f('incident_date',e.target.value)} className="inp"/></Field>
           </div>
           <Field label="Description"><textarea value={form.description} onChange={e=>f('description',e.target.value)} className="inp h-32 resize-none" placeholder="Detailed description of the incident, case or document…"/></Field>
+          <label className="flex items-center gap-2.5 text-sm text-g-sub cursor-pointer bg-n-800 border border-n-600 rounded-lg px-3 py-2.5">
+            <input type="checkbox" checked={form.is_public} onChange={e=>f('is_public',e.target.checked)} className="accent-a-500"/>
+            <Globe className="w-4 h-4 text-emerald-400"/>
+            <span>Show this record on the <strong className="text-g-text">public Police Blotter</strong> (visible to citizens)</span>
+          </label>
         </div>
         <div className="flex gap-3 mt-5 justify-end">
           <button onClick={()=>setModal(false)} className="btn-ghost">Cancel</button>

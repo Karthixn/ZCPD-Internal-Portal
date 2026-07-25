@@ -32,6 +32,7 @@ export default function PublicLayout({ children }) {
             <Tab to="/roster" label="Command" />
             <Tab to="/divisions" label="Divisions" />
             <Tab to="/services" label="Services" />
+            <Tab to="/blotter" label="Blotter" />
             <Tab to="/faq" label="FAQ" />
             <Tab to="/sop" label="SOP" />
             <Tab to="/training" label="Training" />

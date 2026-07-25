@@ -13,6 +13,7 @@ import JoinPage      from './pages/public/JoinPage'
 import DivisionsPage from './pages/public/DivisionsPage'
 import ServicesPage  from './pages/public/ServicesPage'
 import FAQPage       from './pages/public/FAQPage'
+import BlotterPage   from './pages/public/BlotterPage'
 import ProfileSettingsPage from './pages/settings/ProfileSettingsPage'
 import Dashboard    from './pages/Dashboard'
 import OfficersPage from './pages/officers/OfficersPage'
@@ -74,6 +75,7 @@ export default function App() {
           <Route path="/divisions" element={<Auto><DivisionsPage/></Auto>}/>
           <Route path="/services"  element={<Auto><ServicesPage/></Auto>}/>
           <Route path="/faq"       element={<Auto><FAQPage/></Auto>}/>
+          <Route path="/blotter"   element={<Auto><BlotterPage/></Auto>}/>
 
           {/* Internal-only */}
           <Route path="/dashboard" element={<L><Dashboard/></L>}/>
