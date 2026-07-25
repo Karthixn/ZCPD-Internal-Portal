@@ -91,22 +91,25 @@ export default function RosterPage() {
                   </div>
 
                   {/* drop from pill toward the cards */}
-                  <div className={`w-px h-4 ${LINE}`} />
+                  <div className={`w-px h-3 ${LINE}`} />
 
                   {/* Officer node row with branch connectors */}
                   <div className="relative flex justify-center gap-4 px-2">
-                    {/* horizontal branch bar spans between the first and last card centres (card = 8rem wide) */}
-                    {many && <span className={`absolute top-0 h-px ${LINE}`} style={{ left: '4rem', right: '4rem' }} />}
+                    {/* horizontal branch bar spans between the first and last card centres (card = 13rem wide) */}
+                    {many && <span className={`absolute top-0 h-px ${LINE}`} style={{ left: '6.5rem', right: '6.5rem' }} />}
                     {list.map(o => (
-                      <div key={o.id} className="relative w-32 pt-4">
-                        <span className={`absolute top-0 left-1/2 -translate-x-1/2 w-px h-4 ${LINE}`} />
-                        <div className="card p-2.5 flex flex-col items-center text-center hover:border-a-500/40 transition-colors">
-                          <Avatar name={o.name} path={o.avatar_path} size={40} className={`ring-2 ${a.ring}`} />
-                          <p className="text-[11px] font-semibold text-g-text mt-1.5 leading-tight w-full truncate" title={o.name}>{o.name}</p>
-                          <p className="font-mono text-[10px] text-a-400 mt-0.5">{o.badge_no}</p>
-                          {o.status && o.status !== 'ACTIVE'
-                            ? <div className="mt-1 scale-90"><StatusBadge v={o.status} /></div>
-                            : o.designation && <p className="text-[10px] text-g-muted truncate w-full mt-0.5">{o.designation}</p>}
+                      <div key={o.id} className="relative w-52 pt-3">
+                        <span className={`absolute top-0 left-1/2 -translate-x-1/2 w-px h-3 ${LINE}`} />
+                        <div className="card px-3 py-2 flex items-center gap-2.5 text-left hover:border-a-500/40 transition-colors">
+                          <Avatar name={o.name} path={o.avatar_path} size={38} className={`ring-2 shrink-0 ${a.ring}`} />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[13px] font-semibold text-g-text leading-tight truncate" title={o.name}>{o.name}</p>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-mono text-[11px] text-a-400">{o.badge_no}</span>
+                              {o.status && o.status !== 'ACTIVE' && <span className="scale-90 origin-left"><StatusBadge v={o.status} /></span>}
+                            </div>
+                            {o.designation && <p className="text-[10px] text-g-muted truncate">{o.designation}</p>}
+                          </div>
                         </div>
                       </div>
                     ))}
