@@ -69,8 +69,10 @@ export default function App() {
 
           {/* Public + internal (auth-aware layout) */}
           <Route path="/sop"       element={<Auto><SOPPage/></Auto>}/>
-          <Route path="/training"  element={<Auto><TrainingPage/></Auto>}/>
           <Route path="/roster"    element={<Auto><RosterPage/></Auto>}/>
+
+          {/* Training is officer-only (behind login) — not for the public */}
+          <Route path="/training"  element={<L><TrainingPage/></L>}/>
           <Route path="/news"      element={<Auto><NewsPage/></Auto>}/>
           <Route path="/join"      element={<Auto><JoinPage/></Auto>}/>
           <Route path="/divisions" element={<Auto><DivisionsPage/></Auto>}/>

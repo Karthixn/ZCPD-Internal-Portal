@@ -13,7 +13,6 @@ export const DEFAULTS = {
     { label: 'Blotter',   path: '/blotter',   visible: true },
     { label: 'FAQ',       path: '/faq',       visible: true },
     { label: 'SOP',       path: '/sop',       visible: true },
-    { label: 'Training',  path: '/training',  visible: true },
   ],
 
   join: {
