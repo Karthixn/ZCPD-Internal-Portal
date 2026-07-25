@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import { PageHeader, Spinner, Empty } from '../../components/ui'
+import { PageHeader, Spinner, Empty, StatusBadge } from '../../components/ui'
 import Avatar from '../../components/ui/Avatar'
 import { Network, Users, Search, X } from 'lucide-react'
 
@@ -89,7 +89,10 @@ export default function RosterPage() {
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-g-text leading-tight truncate">{o.name}</p>
                         {o.designation && <p className="text-xs text-g-muted truncate mt-0.5">{o.designation}</p>}
-                        <p className="font-mono text-xs text-a-400 mt-1">{o.badge_no}</p>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <span className="font-mono text-xs text-a-400">{o.badge_no}</span>
+                          {o.status && o.status !== 'ACTIVE' && <StatusBadge v={o.status} />}
+                        </div>
                       </div>
                     </div>
                   ))}

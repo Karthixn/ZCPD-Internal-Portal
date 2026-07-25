@@ -28,11 +28,10 @@ create policy av_write on storage.objects
 
 
 -- 3. Public roster view -----------------------------------------
--- Exposes ONLY display-safe columns of ACTIVE officers to the public.
+-- Exposes ONLY display-safe columns of ALL officers to the public.
 -- (Sensitive fields — duty hours, discord, remarks — are never selected.)
 create or replace view public.public_roster as
-  select id, name, rank, badge_no, designation, avatar_path
-  from public.officers
-  where status = 'ACTIVE';
+  select id, name, rank, badge_no, designation, avatar_path, status
+  from public.officers;
 
 grant select on public.public_roster to anon, authenticated;
