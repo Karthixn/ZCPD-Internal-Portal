@@ -7,6 +7,8 @@ import { Shield } from 'lucide-react'
 import LoginPage    from './pages/auth/LoginPage'
 import HomePage     from './pages/public/HomePage'
 import TrainingPage from './pages/public/TrainingPage'
+import RosterPage   from './pages/public/RosterPage'
+import ProfileSettingsPage from './pages/settings/ProfileSettingsPage'
 import Dashboard    from './pages/Dashboard'
 import OfficersPage from './pages/officers/OfficersPage'
 import SwatPage     from './pages/swat/SwatPage'
@@ -61,9 +63,11 @@ export default function App() {
           {/* Public + internal (auth-aware layout) */}
           <Route path="/sop"      element={<Auto><SOPPage/></Auto>}/>
           <Route path="/training" element={<Auto><TrainingPage/></Auto>}/>
+          <Route path="/roster"   element={<Auto><RosterPage/></Auto>}/>
 
           {/* Internal-only */}
           <Route path="/dashboard" element={<L><Dashboard/></L>}/>
+          <Route path="/settings"  element={<L><ProfileSettingsPage/></L>}/>
 
           <Route path="/promotions" element={<L roles={['ftc','fti','fto']}><PromotionHistoryPage/></L>}/>
           <Route path="/officers"  element={<L roles={['ftc','fti','fto']}><OfficersPage/></L>}/>

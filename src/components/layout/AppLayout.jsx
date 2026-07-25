@@ -4,9 +4,10 @@ import { useAuth } from '../../context/AuthContext'
 import {
   Shield, Users, Target, BookOpen, FileText,
   DollarSign, Crosshair, Settings, LogOut,
-  GraduationCap, TrendingUp, ChevronLeft, ChevronRight, Menu, PlayCircle
+  GraduationCap, TrendingUp, ChevronLeft, ChevronRight, Menu, PlayCircle, Network, UserCog
 } from 'lucide-react'
 import { RoleBadge } from '../ui'
+import Avatar from '../ui/Avatar'
 
 function NI({ to, icon: Icon, label, collapsed }) {
   return (
@@ -38,6 +39,7 @@ export default function AppLayout({ children }) {
     { to:'/salary',     icon:DollarSign,    label:'Salary & Duty',show:isFTC },
     { to:'/sop',        icon:BookOpen,      label:'SOP Library',  show:true  },
     { to:'/training',   icon:PlayCircle,    label:'Training',     show:true  },
+    { to:'/roster',     icon:Network,       label:'Chain of Cmd', show:true  },
     { to:'/admin',      icon:Settings,      label:'Admin',        show:isFTC },
   ].filter(n => n.show)
 
@@ -58,13 +60,25 @@ export default function AppLayout({ children }) {
       <div className="border-t border-n-600 p-3 space-y-1">
         {!col && (
           <div className="px-2 pb-2">
-            <div className="flex items-center justify-between mb-0.5">
-              <p className="text-sm font-medium text-g-text truncate">{officer?.name ?? profile?.email ?? 'Officer'}</p>
-              <RoleBadge v={role}/>
+            <div className="flex items-center gap-2.5 mb-1">
+              <Avatar name={officer?.name ?? profile?.email} path={officer?.avatar_path} size={34} className="shrink-0"/>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-1">
+                  <p className="text-sm font-medium text-g-text truncate">{officer?.name ?? profile?.email ?? 'Officer'}</p>
+                  <RoleBadge v={role}/>
+                </div>
+                <p className="text-xs text-g-muted truncate">{officer?.rank ?? ''} {officer?.badge_no ? `· ${officer.badge_no}` : ''}</p>
+              </div>
             </div>
-            <p className="text-xs text-g-muted">{officer?.rank ?? ''} {officer?.badge_no ? `· ${officer.badge_no}` : ''}</p>
           </div>
         )}
+        <NavLink to="/settings" className={({ isActive }) =>
+          `flex items-center gap-2.5 w-full px-3 py-2 rounded-lg transition-colors text-sm
+           ${isActive ? 'bg-a-500/15 text-a-400' : 'text-g-muted hover:text-g-text hover:bg-white/5'} ${col ? 'justify-center' : ''}`
+        }>
+          <UserCog className="w-4 h-4 shrink-0"/>
+          {!col && 'Settings'}
+        </NavLink>
         <button onClick={async () => { await signOut(); navigate('/login') }}
           className={`flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-g-muted hover:text-red-400 hover:bg-red-900/10 transition-colors text-sm ${col ? 'justify-center' : ''}`}>
           <LogOut className="w-4 h-4 shrink-0"/>

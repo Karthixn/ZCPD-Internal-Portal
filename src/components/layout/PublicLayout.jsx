@@ -30,6 +30,7 @@ export default function PublicLayout({ children }) {
             <Tab to="/" label="Home" />
             <Tab to="/sop" label="SOP" />
             <Tab to="/training" label="Training" />
+            <Tab to="/roster" label="Command" />
           </nav>
 
           {/* Login top-right */}

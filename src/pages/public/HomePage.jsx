@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { BookOpen, PlayCircle, ArrowRight, Shield, GraduationCap } from 'lucide-react'
+import { BookOpen, PlayCircle, ArrowRight, Shield, GraduationCap, Network } from 'lucide-react'
 
 const CARDS = [
   {
@@ -13,6 +13,12 @@ const CARDS = [
     icon: PlayCircle,
     title: 'Training Videos',
     desc: 'Watch official ZCPD training material — patrol, procedure and tactics — at your own pace.',
+  },
+  {
+    to: '/roster',
+    icon: Network,
+    title: 'Chain of Command',
+    desc: 'See the ZCPD rank structure and the officers who serve at each level of the department.',
   },
 ]
 
@@ -39,7 +45,7 @@ export default function HomePage() {
       </section>
 
       {/* Resource cards */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-16">
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-16">
         {CARDS.map(c => (
           <Link key={c.to} to={c.to}
             className="card p-6 group hover:border-a-500/40 transition-colors">
