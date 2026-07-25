@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import {
-  Users, Shield, Clock, Target, GraduationCap, TrendingUp, ChevronRight,
-  Network, Award, UserPlus, FileText, Megaphone, XCircle, Calendar
+  Users, Shield, Clock, GraduationCap, TrendingUp, ChevronRight,
+  Network, Award, UserPlus, FileText, Megaphone, XCircle, Calendar, Plus, Activity, Trash2
 } from 'lucide-react'
-import { StatCard, RoleBadge } from '../components/ui'
+import { StatCard, RoleBadge, Modal, Field, Select } from '../components/ui'
 import Avatar from '../components/ui/Avatar'
+import { logActivity } from '../lib/activity'
 
 const RANK_ORDER = ['Chief Of Police','DGP','ADGP','Commissioner','DIG','IG','SP','DYSP','CI','SI','ASI','HC','CPO','PO']
 const rankIndex = (r) => { const i = RANK_ORDER.indexOf(r); return i === -1 ? RANK_ORDER.length : i }
@@ -21,41 +22,73 @@ const STATUS_META = [
   ['RESIGNED',  'Resigned',  'bg-gray-500'],
 ]
 
+const EVENT_BLANK = { title: '', description: '', category: 'Event', event_date: '', event_time: '' }
+
 export default function Dashboard() {
-  const { officer, role, isFTO } = useAuth()
+  const { officer, role, isFTO, isFTI } = useAuth()
   const navigate = useNavigate()
   const [stats, setStats]       = useState({})
   const [chain, setChain]       = useState([])
   const [promos, setPromos]     = useState([])
   const [cadets, setCadets]     = useState([])
   const [cadetCount, setCadetCount] = useState(0)
+  const [events, setEvents]     = useState([])
+  const [activity, setActivity] = useState([])
   const [loading, setLoading]   = useState(true)
+
+  // event management (FTC/FTI)
+  const [evModal, setEvModal] = useState(false)
+  const [evForm, setEvForm]   = useState(EVENT_BLANK)
+  const [evSaving, setEvSaving] = useState(false)
+  const ef = (k, v) => setEvForm(p => ({ ...p, [k]: v }))
 
   const now = new Date()
   const hour = now.getHours()
   const greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
   const dateStr = now.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' })
 
-  useEffect(() => {
-    async function load() {
-      const [{ data: offs }, { data: cads }, { data: pr }] = await Promise.all([
-        supabase.from('officers').select('id,name,rank,badge_no,designation,status,avatar_path'),
-        supabase.from('cadet_applications').select('name,badge_no,status,batch_no').order('created_at', { ascending: false }).limit(5),
-        supabase.from('promotion_history').select('*, officers(name,rank,badge_no,avatar_path)').order('promoted_date', { ascending: false }).limit(5),
-      ])
-      if (offs) {
-        const c = offs.reduce((a, o) => { a[o.status] = (a[o.status] || 0) + 1; return a }, {})
-        setStats({ total: offs.length, ...c })
-        setChain([...offs].sort((a, b) => rankIndex(a.rank) - rankIndex(b.rank)).slice(0, 5))
-      }
-      setCadets(cads ?? [])
-      setPromos(pr ?? [])
-      const { count } = await supabase.from('cadet_applications').select('*', { count: 'exact', head: true })
-      setCadetCount(count ?? 0)
-      setLoading(false)
+  async function load() {
+    const today = new Date().toISOString().slice(0, 10)
+    const [{ data: offs }, { data: cads }, { data: pr }, { data: ev }, { data: act }] = await Promise.all([
+      supabase.from('officers').select('id,name,rank,badge_no,designation,status,avatar_path'),
+      supabase.from('cadet_applications').select('name,badge_no,status,batch_no').order('created_at', { ascending: false }).limit(5),
+      supabase.from('promotion_history').select('*, officers(name,rank,badge_no,avatar_path)').order('promoted_date', { ascending: false }).limit(5),
+      supabase.from('events').select('*').gte('event_date', today).order('event_date').order('event_time').limit(5),
+      supabase.from('activity_log').select('*').order('created_at', { ascending: false }).limit(6),
+    ])
+    if (offs) {
+      const c = offs.reduce((a, o) => { a[o.status] = (a[o.status] || 0) + 1; return a }, {})
+      setStats({ total: offs.length, ...c })
+      setChain([...offs].sort((a, b) => rankIndex(a.rank) - rankIndex(b.rank)).slice(0, 5))
     }
-    load()
-  }, [])
+    setCadets(cads ?? [])
+    setPromos(pr ?? [])
+    setEvents(ev ?? [])
+    setActivity(act ?? [])
+    const { count } = await supabase.from('cadet_applications').select('*', { count: 'exact', head: true })
+    setCadetCount(count ?? 0)
+    setLoading(false)
+  }
+  useEffect(() => { load() }, [])
+
+  async function saveEvent() {
+    if (!evForm.title.trim() || !evForm.event_date) return
+    setEvSaving(true)
+    await supabase.from('events').insert({ ...evForm, title: evForm.title.trim() })
+    logActivity({ action: `Scheduled event: ${evForm.title.trim()}`, kind: 'event', actor: officer?.name })
+    setEvSaving(false); setEvModal(false); setEvForm(EVENT_BLANK); load()
+  }
+  async function deleteEvent(id) {
+    await supabase.from('events').delete().eq('id', id); load()
+  }
+  const relTime = (iso) => {
+    const s = Math.floor((Date.now() - new Date(iso)) / 1000)
+    if (s < 60) return 'just now'
+    if (s < 3600) return `${Math.floor(s / 60)} min ago`
+    if (s < 86400) return `${Math.floor(s / 3600)} hr ago`
+    return `${Math.floor(s / 86400)}d ago`
+  }
+  const fmtEvDate = (d) => new Date(d).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
 
   const QUICK = [
     { label: 'Recruit new cadet',   path: '/fto/new-cadet',    icon: UserPlus },
@@ -142,8 +175,53 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Bottom row */}
+          {/* Events + Activity */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            {/* Upcoming events */}
+            <div className="card p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-semibold text-g-text flex items-center gap-2"><Calendar className="w-4 h-4 text-a-400"/>Upcoming Events</h3>
+                {isFTI && <button onClick={()=>{ setEvForm(EVENT_BLANK); setEvModal(true) }} className="text-xs text-a-400 hover:underline flex items-center gap-1"><Plus className="w-3 h-3"/>Add</button>}
+              </div>
+              {loading ? <p className="text-sm text-g-muted">Loading…</p>
+              : events.length === 0 ? <p className="text-sm text-g-muted">No upcoming events.</p>
+              : <div className="space-y-3">
+                  {events.map(e => (
+                    <div key={e.id} className="flex items-start gap-3 group">
+                      <div className="flex flex-col items-center justify-center w-11 h-11 rounded-lg bg-a-500/10 border border-a-500/20 shrink-0">
+                        <span className="text-[10px] font-bold text-a-400 uppercase leading-none">{new Date(e.event_date).toLocaleDateString(undefined,{month:'short'})}</span>
+                        <span className="text-sm font-bold text-g-text leading-none mt-0.5">{new Date(e.event_date).getDate()}</span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-g-text truncate">{e.title}</p>
+                        <p className="text-xs text-g-muted">{fmtEvDate(e.event_date)}{e.event_time ? ` · ${e.event_time}` : ''}{e.category ? ` · ${e.category}` : ''}</p>
+                      </div>
+                      {isFTI && <button onClick={()=>deleteEvent(e.id)} className="opacity-0 group-hover:opacity-100 text-g-muted hover:text-red-400 transition-opacity shrink-0"><Trash2 className="w-3.5 h-3.5"/></button>}
+                    </div>
+                  ))}
+                </div>
+              }
+            </div>
+
+            {/* Recent activity */}
+            <div className="card p-5">
+              <h3 className="text-sm font-semibold text-g-text flex items-center gap-2 mb-4"><Activity className="w-4 h-4 text-a-400"/>Recent Activity</h3>
+              {loading ? <p className="text-sm text-g-muted">Loading…</p>
+              : activity.length === 0 ? <p className="text-sm text-g-muted">No activity recorded yet.</p>
+              : <div className="space-y-3">
+                  {activity.map(a => (
+                    <div key={a.id} className="flex items-start gap-2.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-a-400 mt-1.5 shrink-0"/>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm text-g-sub leading-snug">{a.action}</p>
+                        <p className="text-[11px] text-g-muted">{relTime(a.created_at)}{a.actor ? ` · ${a.actor}` : ''}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              }
+            </div>
+
             {/* Force status breakdown */}
             <div className="card p-5">
               <h3 className="text-sm font-semibold text-g-text flex items-center gap-2 mb-4"><Shield className="w-4 h-4 text-a-400"/>Force Status</h3>
@@ -213,6 +291,27 @@ export default function Dashboard() {
           </div>
         </>
       )}
+
+      {/* Add event modal */}
+      <Modal open={evModal} onClose={()=>setEvModal(false)} title="Schedule event">
+        <div className="space-y-4">
+          <Field label="Title" required><input value={evForm.title} onChange={e=>ef('title',e.target.value)} className="inp" placeholder="e.g. Firearms Training"/></Field>
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Date" required><input type="date" value={evForm.event_date} onChange={e=>ef('event_date',e.target.value)} className="inp"/></Field>
+            <Field label="Time"><input value={evForm.event_time} onChange={e=>ef('event_time',e.target.value)} className="inp" placeholder="09:00 AM"/></Field>
+          </div>
+          <Field label="Category">
+            <Select value={evForm.category} onChange={e=>ef('category',e.target.value)}>
+              {['Event','Training','Meeting','Briefing','Operation'].map(c=><option key={c}>{c}</option>)}
+            </Select>
+          </Field>
+          <Field label="Description"><textarea value={evForm.description} onChange={e=>ef('description',e.target.value)} className="inp min-h-[70px] resize-y" placeholder="Optional details…"/></Field>
+        </div>
+        <div className="flex gap-3 mt-5 justify-end">
+          <button onClick={()=>setEvModal(false)} className="btn-ghost">Cancel</button>
+          <button onClick={saveEvent} disabled={evSaving} className="btn-primary">{evSaving?'Saving…':'Schedule'}</button>
+        </div>
+      </Modal>
     </div>
   )
 }

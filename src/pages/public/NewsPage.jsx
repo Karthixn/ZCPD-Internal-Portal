@@ -3,12 +3,13 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import { PageHeader, Modal, Field, Select, Spinner, Empty } from '../../components/ui'
 import { Megaphone, Plus, Pencil, Trash2, Pin, AlertCircle } from 'lucide-react'
+import { logActivity } from '../../lib/activity'
 
 const BLANK = { title: '', body: '', category: 'Update', pinned: false }
 const fmtDate = (s) => new Date(s).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
 
 export default function NewsPage() {
-  const { isFTI } = useAuth()
+  const { isFTI, officer: me } = useAuth()
   const canManage = isFTI
 
   const [posts, setPosts]     = useState([])
@@ -44,6 +45,7 @@ export default function NewsPage() {
       : await supabase.from('news_posts').insert(row)
     setSaving(false)
     if (res.error) { setErr(res.error.message); return }
+    if (!target) logActivity({ action: `Posted announcement: ${row.title}`, kind: 'news', actor: me?.name })
     setModal(false); load()
   }
 

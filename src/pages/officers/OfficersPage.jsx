@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { Users, Search, Plus, Download, Pencil, Trash2, Upload } from 'lucide-react'
 import { PageHeader, StatusBadge, Select, Modal, Field, Spinner, Empty } from '../../components/ui'
 import Avatar from '../../components/ui/Avatar'
+import { logActivity } from '../../lib/activity'
 
 const AV_BUCKET = 'avatars'
 
@@ -37,7 +38,7 @@ function getNextPromotion(rank) {
 const BLANK = { name:'',rank:'CPO',designation:'',badge_no:'',discord_id:'',status:'ACTIVE',remarks:'',total_duty_hrs:0,months_served:0,last_promotion_date:'',next_promotion:'' }
 
 export default function OfficersPage() {
-  const { isFTI, isFTC } = useAuth()
+  const { isFTI, isFTC, officer: me } = useAuth()
   const [officers, setOfficers] = useState([])
   const [filtered, setFiltered] = useState([])
   const [loading, setLoading]   = useState(true)
@@ -77,8 +78,10 @@ export default function OfficersPage() {
     const payload = { ...form, total_duty_hrs: hrs, months_served: months, eligibility, next_promotion }
     if (editId) {
       await supabase.from('officers').update(payload).eq('id', editId)
+      logActivity({ action: `Updated officer ${payload.name}`, kind: 'officer', actor: me?.name })
     } else {
       await supabase.from('officers').insert(payload)
+      logActivity({ action: `Added officer ${payload.name} (${payload.rank})`, kind: 'officer', actor: me?.name })
     }
     setSaving(false); setModal(false); load()
   }
