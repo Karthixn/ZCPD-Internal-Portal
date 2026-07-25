@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { BookOpen, PlayCircle, ArrowRight, Shield, GraduationCap, Network } from 'lucide-react'
+import { BookOpen, PlayCircle, ArrowRight, GraduationCap, Network } from 'lucide-react'
 
 const CARDS = [
   {
@@ -61,17 +61,6 @@ export default function HomePage() {
         ))}
       </section>
 
-      {/* Staff note */}
-      <section className="pb-20">
-        <div className="card p-5 flex items-center gap-4">
-          <Shield className="w-6 h-6 text-a-400 shrink-0" />
-          <div className="flex-1">
-            <p className="text-sm font-medium text-g-text">Are you FTO / FTI / FTC staff?</p>
-            <p className="text-xs text-g-muted">Sign in to access officer records, the FTO portal and administration.</p>
-          </div>
-          <Link to="/login" className="btn-primary py-1.5 shrink-0">Login</Link>
-        </div>
-      </section>
     </div>
   )
 }

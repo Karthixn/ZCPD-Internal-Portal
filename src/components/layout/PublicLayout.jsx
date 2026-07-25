@@ -1,5 +1,4 @@
 import { NavLink, Link } from 'react-router-dom'
-import { LogIn } from 'lucide-react'
 
 function Tab({ to, label }) {
   return (
@@ -32,12 +31,6 @@ export default function PublicLayout({ children }) {
             <Tab to="/training" label="Training" />
             <Tab to="/roster" label="Command" />
           </nav>
-
-          {/* Login top-right */}
-          <Link to="/login" className="ml-auto btn-primary py-1.5">
-            <LogIn className="w-4 h-4" />
-            Login
-          </Link>
         </div>
       </header>
 
