@@ -23,6 +23,7 @@ import RecordsPage  from './pages/records/RecordsPage'
 import WeaponsPage  from './pages/weapons/WeaponsPage'
 import SalaryPage   from './pages/salary/SalaryPage'
 import AdminPage    from './pages/admin/AdminPage'
+import SiteEditorPage from './pages/admin/SiteEditorPage'
 import SOPPage      from './pages/sop/SOPPage'
 import PromotionHistoryPage from './pages/promotions/PromotionHistoryPage'
 
@@ -92,6 +93,7 @@ export default function App() {
           <Route path="/weapons"   element={<L roles={['ftc','fti']}><WeaponsPage/></L>}/>
           <Route path="/salary"    element={<L roles={['ftc']}><SalaryPage/></L>}/>
           <Route path="/admin"     element={<L roles={['ftc']}><AdminPage/></L>}/>
+          <Route path="/site-editor" element={<L roles={['ftc']}><SiteEditorPage/></L>}/>
 
           <Route path="*"          element={<Navigate to="/" replace/>}/>
         </Routes>

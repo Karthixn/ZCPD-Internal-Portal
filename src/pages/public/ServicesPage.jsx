@@ -1,22 +1,11 @@
 import { PageHeader } from '../../components/ui'
+import { useSiteContent } from '../../lib/siteContent'
 import { Scale, CreditCard, FileText, AlertTriangle, Phone } from 'lucide-react'
 
-const LICENSES = [
-  ["Learner's License", 'Permits supervised driving practice — you must be accompanied by a licensed driver.'],
-  ["Driver's License", 'Full authorization to operate motor vehicles within Zion City.'],
-  ['Firearm License', 'Required to legally purchase, possess and carry a firearm. Verified during any firearm-related stop.'],
-  ['Residential ID', 'Proof of Zion City residency, required for certain city services.'],
-  ['Press / News ID', 'For accredited media — grants access rights at public events and briefings.'],
-]
-
-const REPORTS = [
-  ['Report a crime', 'For emergencies call 911. For non-urgent matters, contact the station front desk or a patrol officer.'],
-  ['Request a police record', 'Records and incident reports can be requested through the station. Bring valid ID.'],
-  ['File a complaint', 'Complaints about an officer are taken seriously and reviewed by command staff. Note the officer\'s badge number if possible.'],
-  ['Recover impounded property', 'Vehicles or items seized as evidence can be reclaimed once released — contact the evidence desk.'],
-]
-
 export default function ServicesPage() {
+  const c = useSiteContent('services')
+  const LICENSES = (c.licenses || []).map(l => [l.name, l.desc])
+  const REPORTS = (c.reports || []).map(r => [r.title, r.desc])
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
       <PageHeader icon={Scale} title="Citizen Services" sub="Licenses, reports and how the ZCPD can help you" />
@@ -25,8 +14,7 @@ export default function ServicesPage() {
       <div className="card p-4 mb-6 flex items-center gap-4 bg-red-900/10 border-red-700/30">
         <Phone className="w-6 h-6 text-red-400 shrink-0" />
         <div>
-          <p className="text-sm font-semibold text-g-text">In an emergency, always call 911</p>
-          <p className="text-xs text-g-muted">For life-threatening situations, crimes in progress, or immediate danger.</p>
+          <p className="text-sm text-g-sub whitespace-pre-line">{c.emergency}</p>
         </div>
       </div>
 

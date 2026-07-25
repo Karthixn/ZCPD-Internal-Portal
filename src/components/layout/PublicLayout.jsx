@@ -1,9 +1,10 @@
 import { NavLink, Link } from 'react-router-dom'
+import { useSiteContent } from '../../lib/siteContent'
 
 function Tab({ to, label }) {
   return (
     <NavLink to={to} end className={({ isActive }) =>
-      `px-3 py-1.5 rounded-lg text-sm font-medium transition-colors
+      `px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap
        ${isActive ? 'bg-a-500/15 text-a-400' : 'text-g-muted hover:text-g-text hover:bg-white/5'}`
     }>
       {label}
@@ -12,6 +13,7 @@ function Tab({ to, label }) {
 }
 
 export default function PublicLayout({ children }) {
+  const nav = useSiteContent('nav')
   return (
     <div className="min-h-screen flex flex-col bg-n-900">
       {/* Top bar */}
@@ -26,16 +28,7 @@ export default function PublicLayout({ children }) {
           </Link>
 
           <nav className="flex items-center gap-1 ml-2 overflow-x-auto no-scrollbar">
-            <Tab to="/" label="Home" />
-            <Tab to="/news" label="News" />
-            <Tab to="/join" label="Join" />
-            <Tab to="/roster" label="Command" />
-            <Tab to="/divisions" label="Divisions" />
-            <Tab to="/services" label="Services" />
-            <Tab to="/blotter" label="Blotter" />
-            <Tab to="/faq" label="FAQ" />
-            <Tab to="/sop" label="SOP" />
-            <Tab to="/training" label="Training" />
+            {(nav || []).filter(t => t.visible !== false).map(t => <Tab key={t.path} to={t.path} label={t.label} />)}
           </nav>
         </div>
       </header>

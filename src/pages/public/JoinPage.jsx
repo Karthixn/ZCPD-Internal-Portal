@@ -1,37 +1,19 @@
 import { PageHeader } from '../../components/ui'
+import { useSiteContent } from '../../lib/siteContent'
 import { GraduationCap, CheckCircle2, ClipboardList, TrendingUp, Users } from 'lucide-react'
 
-const REQUIREMENTS = [
-  'Be an active, verified member of the Zion City community',
-  'Maintain a clean record (no serious active charges)',
-  'A working microphone and clear communication',
-  'Commitment to professional, fair role-play at all times',
-  'Willingness to learn and follow the ZCPD SOP',
-]
-
-const STEPS = [
-  ['Apply', 'Submit a recruitment application through the ZCPD Discord.'],
-  ['Interview', 'Attend a short interview with a Field Training Instructor (FTI).'],
-  ['Academy', 'Complete basic training on laws, procedure and radio protocol.'],
-  ['Field Training', 'Ride along with an FTO across the training phases until signed off.'],
-  ['Sworn In', 'Pass your final evaluation and be sworn in as a Constable.'],
-]
-
-const LADDER = ['PO', 'CPO', 'HC', 'ASI', 'SI', 'CI', 'DYSP', 'SP', '…']
-
 export default function JoinPage() {
+  const c = useSiteContent('join')
+  const REQUIREMENTS = c.requirements || []
+  const STEPS = (c.steps || []).map(s => [s.title, s.desc])
+  const LADDER = c.ladder || []
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
       <PageHeader icon={GraduationCap} title="Join ZCPD" sub="Serve Zion City — become a police officer" />
 
       {/* Intro */}
       <div className="card p-6 mb-6">
-        <p className="text-sm text-g-sub leading-relaxed">
-          The Zion City Police Department is always looking for dedicated recruits who want to protect the
-          community and uphold the law. No prior experience is required — our Field Training program will
-          teach you everything from patrol procedure to radio communication. If you're ready to earn the
-          badge, here's how to get started.
-        </p>
+        <p className="text-sm text-g-sub leading-relaxed whitespace-pre-line">{c.intro}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -81,8 +63,7 @@ export default function JoinPage() {
       {/* CTA */}
       <div className="card p-6 text-center bg-a-500/5 border-a-500/20">
         <h2 className="text-lg font-semibold text-g-text mb-1.5">Ready to apply?</h2>
-        <p className="text-sm text-g-muted mb-4">Applications are handled through the official ZCPD Discord server.</p>
-        <p className="text-xs text-g-muted">Ask a staff member for the current recruitment link.</p>
+        <p className="text-sm text-g-muted whitespace-pre-line">{c.applyNote}</p>
       </div>
     </div>
   )
