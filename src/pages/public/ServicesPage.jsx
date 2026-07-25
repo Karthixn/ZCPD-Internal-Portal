@@ -1,5 +1,5 @@
 import { PageHeader } from '../../components/ui'
-import { Scale, IdCard, FileText, AlertTriangle, Phone } from 'lucide-react'
+import { Scale, CreditCard, FileText, AlertTriangle, Phone } from 'lucide-react'
 
 const LICENSES = [
   ["Learner's License", 'Permits supervised driving practice — you must be accompanied by a licensed driver.'],
@@ -32,7 +32,7 @@ export default function ServicesPage() {
 
       {/* Licenses & IDs */}
       <div className="card p-6 mb-6">
-        <div className="flex items-center gap-2 mb-4"><IdCard className="w-4 h-4 text-a-400" /><h2 className="text-base font-semibold text-g-text">Licenses & Identification</h2></div>
+        <div className="flex items-center gap-2 mb-4"><CreditCard className="w-4 h-4 text-a-400" /><h2 className="text-base font-semibold text-g-text">Licenses & Identification</h2></div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {LICENSES.map(([t, d]) => (
             <div key={t} className="bg-n-800 border border-n-600 rounded-lg p-3">
