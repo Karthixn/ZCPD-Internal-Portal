@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import { PageHeader, Modal, Field, Spinner, Empty } from '../../components/ui'
-import { PlayCircle, Plus, Pencil, Trash2, AlertCircle, Film } from 'lucide-react'
+import { PlayCircle, Plus, Pencil, Trash2, AlertCircle, Film, Search, X, Layers } from 'lucide-react'
 
 const BLANK = { title: '', description: '', category: 'General', youtube_url: '' }
 
@@ -21,6 +21,10 @@ export default function TrainingPage() {
   const [videos, setVideos]   = useState([])
   const [loading, setLoading] = useState(true)
   const [active, setActive]   = useState(null)
+
+  // filtering
+  const [query, setQuery] = useState('')
+  const [cat, setCat]     = useState('All')
 
   // manage modal
   const [modal, setModal]   = useState(false)
@@ -44,11 +48,27 @@ export default function TrainingPage() {
   }
   useEffect(() => { load() }, [])
 
-  const categories = useMemo(() => {
+  const allCats = useMemo(
+    () => [...new Set(videos.map(v => v.category || 'General'))],
+    [videos]
+  )
+
+  // Apply category + search filter
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    return videos.filter(v => {
+      if (cat !== 'All' && (v.category || 'General') !== cat) return false
+      if (!q) return true
+      return (v.title + ' ' + (v.description || '') + ' ' + (v.category || '')).toLowerCase().includes(q)
+    })
+  }, [videos, query, cat])
+
+  // Group the filtered list by category for the playlist
+  const grouped = useMemo(() => {
     const map = {}
-    for (const v of videos) (map[v.category || 'General'] ??= []).push(v)
+    for (const v of filtered) (map[v.category || 'General'] ??= []).push(v)
     return map
-  }, [videos])
+  }, [filtered])
 
   function openNew()  { setTarget(null); setForm(BLANK); setErr(''); setModal(true) }
   function openEdit(v){ setTarget(v); setForm({ title: v.title, description: v.description || '', category: v.category || 'General', youtube_url: v.youtube_url || '' }); setErr(''); setModal(true) }
@@ -97,62 +117,109 @@ export default function TrainingPage() {
       ) : videos.length === 0 ? (
         <Empty icon={Film} title="No training videos yet" desc={canManage ? 'Use “Add video” to add the first one.' : 'Check back soon — videos will appear here.'} />
       ) : (
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Player */}
-          <div className="flex-1 min-w-0">
-            {active ? (
-              <>
-                <div className="aspect-video w-full rounded-xl overflow-hidden bg-black">
-                  <iframe
-                    key={active.id}
-                    src={embedUrl(active.youtube_url)}
-                    title={active.title}
-                    className="w-full h-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-                    allowFullScreen
-                  />
-                </div>
-                <div className="mt-4 flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-[10px] font-bold text-a-400 uppercase tracking-wider mb-1">{active.category}</p>
-                    <h2 className="text-lg font-semibold text-g-text">{active.title}</h2>
-                    {active.description && <p className="text-sm text-g-muted mt-1.5 whitespace-pre-line">{active.description}</p>}
-                  </div>
-                  {canManage && (
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button onClick={() => openEdit(active)} className="text-xs px-2 py-1 rounded border border-n-600 text-a-400 hover:bg-a-500/10 transition-colors" title="Edit"><Pencil className="w-3.5 h-3.5" /></button>
-                      <button onClick={() => setDelTarget(active)} className="text-xs px-2 py-1 rounded border border-n-600 text-red-400 hover:bg-red-900/20 transition-colors" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
-                    </div>
-                  )}
-                </div>
-              </>
-            ) : (
-              <div className="aspect-video w-full card flex items-center justify-center text-g-muted text-sm">Select a video to play</div>
-            )}
+        <>
+          {/* Toolbar: summary · search · category chips */}
+          <div className="card p-3 mb-5 flex flex-col lg:flex-row lg:items-center gap-3">
+            <div className="flex items-center gap-2 text-xs text-g-muted shrink-0">
+              <Film className="w-3.5 h-3.5 text-a-400" />
+              <span><strong className="text-g-text">{videos.length}</strong> video{videos.length !== 1 && 's'}</span>
+              <span className="text-g-muted/50">·</span>
+              <Layers className="w-3.5 h-3.5 text-a-400" />
+              <span><strong className="text-g-text">{allCats.length}</strong> categor{allCats.length !== 1 ? 'ies' : 'y'}</span>
+            </div>
+
+            <div className="relative flex-1 min-w-0 lg:max-w-xs">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-g-muted pointer-events-none" />
+              <input
+                value={query} onChange={e => setQuery(e.target.value)}
+                className="inp pl-9 pr-8" placeholder="Search videos…"
+              />
+              {query && (
+                <button onClick={() => setQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-g-muted hover:text-g-text">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1.5 overflow-x-auto lg:ml-auto">
+              {['All', ...allCats].map(c => (
+                <button key={c} onClick={() => setCat(c)}
+                  className={`px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap border transition-colors
+                    ${cat === c ? 'bg-a-500/15 border-a-500/30 text-a-400' : 'border-n-600 text-g-muted hover:text-g-text hover:bg-white/5'}`}>
+                  {c}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Playlist */}
-          <div className="w-full lg:w-80 shrink-0 space-y-4 lg:max-h-[calc(100vh-12rem)] lg:overflow-y-auto">
-            {Object.entries(categories).map(([cat, vids]) => (
-              <div key={cat}>
-                <p className="text-[10px] font-bold text-g-muted uppercase tracking-wider mb-1.5 px-1">{cat}</p>
-                <div className="space-y-1.5">
-                  {vids.map(v => (
-                    <button key={v.id} onClick={() => setActive(v)}
-                      className={`w-full flex items-center gap-3 p-1.5 rounded-lg text-left transition-colors border
-                        ${active?.id === v.id ? 'bg-a-500/15 border-a-500/25' : 'border-transparent hover:bg-white/5'}`}>
-                      <div className="relative w-20 h-12 rounded-md overflow-hidden bg-n-700 shrink-0">
-                        <img src={thumbUrl(v.youtube_url)} alt="" className="w-full h-full object-cover" loading="lazy" />
-                        {active?.id === v.id && <div className="absolute inset-0 bg-a-500/25 flex items-center justify-center"><PlayCircle className="w-4 h-4 text-white" /></div>}
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Player + description */}
+            <div className="flex-1 min-w-0">
+              {active ? (
+                <>
+                  <div className="aspect-video w-full rounded-xl overflow-hidden bg-black shadow-lg">
+                    <iframe
+                      key={active.id}
+                      src={embedUrl(active.youtube_url)}
+                      title={active.title}
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                      allowFullScreen
+                    />
+                  </div>
+                  <div className="card p-5 mt-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <span className="inline-block text-[10px] font-bold text-a-400 uppercase tracking-wider bg-a-500/10 border border-a-500/20 rounded px-1.5 py-0.5 mb-2">{active.category}</span>
+                        <h2 className="text-lg font-semibold text-g-text">{active.title}</h2>
+                        {active.description
+                          ? <p className="text-sm text-g-sub mt-2 whitespace-pre-line leading-relaxed">{active.description}</p>
+                          : <p className="text-sm text-g-muted mt-2 italic">No description.</p>}
                       </div>
-                      <span className={`text-sm leading-snug line-clamp-2 ${active?.id === v.id ? 'text-a-400 font-medium' : 'text-g-sub'}`}>{v.title}</span>
-                    </button>
-                  ))}
-                </div>
+                      {canManage && (
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button onClick={() => openEdit(active)} className="text-xs px-2 py-1 rounded border border-n-600 text-a-400 hover:bg-a-500/10 transition-colors" title="Edit"><Pencil className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => setDelTarget(active)} className="text-xs px-2 py-1 rounded border border-n-600 text-red-400 hover:bg-red-900/20 transition-colors" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="aspect-video w-full card flex items-center justify-center text-g-muted text-sm">Select a video to play</div>
+              )}
+            </div>
+
+            {/* Playlist */}
+            <div className="w-full lg:w-80 shrink-0">
+              <div className="card p-3 lg:max-h-[calc(100vh-16rem)] lg:overflow-y-auto space-y-4">
+                <p className="text-xs font-semibold text-g-text px-1">
+                  {filtered.length === videos.length ? 'All videos' : `${filtered.length} result${filtered.length !== 1 ? 's' : ''}`}
+                </p>
+                {filtered.length === 0 ? (
+                  <p className="text-sm text-g-muted px-1 py-6 text-center">No videos match your search.</p>
+                ) : Object.entries(grouped).map(([c, vids]) => (
+                  <div key={c}>
+                    <p className="text-[10px] font-bold text-g-muted uppercase tracking-wider mb-1.5 px-1">{c}</p>
+                    <div className="space-y-1.5">
+                      {vids.map(v => (
+                        <button key={v.id} onClick={() => setActive(v)}
+                          className={`w-full flex items-center gap-3 p-1.5 rounded-lg text-left transition-colors border
+                            ${active?.id === v.id ? 'bg-a-500/15 border-a-500/25' : 'border-transparent hover:bg-white/5'}`}>
+                          <div className="relative w-20 h-12 rounded-md overflow-hidden bg-n-700 shrink-0">
+                            <img src={thumbUrl(v.youtube_url)} alt="" className="w-full h-full object-cover" loading="lazy" />
+                            {active?.id === v.id && <div className="absolute inset-0 bg-a-500/25 flex items-center justify-center"><PlayCircle className="w-4 h-4 text-white" /></div>}
+                          </div>
+                          <span className={`text-sm leading-snug line-clamp-2 ${active?.id === v.id ? 'text-a-400 font-medium' : 'text-g-sub'}`}>{v.title}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* Add / edit modal */}
@@ -161,7 +228,7 @@ export default function TrainingPage() {
           <Field label="Title" required><input value={form.title} onChange={e => f('title', e.target.value)} className="inp" placeholder="e.g. Traffic Stop Procedure" /></Field>
           <Field label="Category">
             <input value={form.category} onChange={e => f('category', e.target.value)} className="inp" placeholder="General" list="tv-cats" />
-            <datalist id="tv-cats">{[...new Set(videos.map(v => v.category).filter(Boolean))].map(c => <option key={c} value={c} />)}</datalist>
+            <datalist id="tv-cats">{allCats.map(c => <option key={c} value={c} />)}</datalist>
           </Field>
           <Field label="YouTube link" required>
             <input value={form.youtube_url} onChange={e => f('youtube_url', e.target.value)} className="inp" placeholder="https://youtu.be/… or https://www.youtube.com/watch?v=…" />
