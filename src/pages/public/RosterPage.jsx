@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import { PageHeader, Spinner, Empty, StatusBadge } from '../../components/ui'
+import { PageHeader, Spinner, Empty } from '../../components/ui'
 import Avatar from '../../components/ui/Avatar'
 import { Network, Users, Search, X } from 'lucide-react'
 
@@ -79,8 +79,8 @@ export default function RosterPage() {
       ) : levels.length === 0 ? (
         <Empty icon={Search} title="No matches" desc="No officers match your search." />
       ) : (
-        <div className="overflow-x-auto pb-4">
-          <div className="min-w-max flex flex-col items-center mx-auto">
+        <div className="pb-4">
+          <div className="flex flex-col items-center w-full">
             {levels.map(([rank, list], li) => {
               const a = ACCENT[tierOf(rank)]
               const many = list.length > 1
@@ -100,20 +100,17 @@ export default function RosterPage() {
                   <div className={`w-px h-3 ${LINE}`} />
 
                   {/* Officer node row with branch connectors */}
-                  <div className="relative flex justify-center gap-4 px-2">
-                    {/* horizontal branch bar spans between the first and last card centres (card = 13rem wide) */}
-                    {many && <span className={`absolute top-0 h-px ${LINE}`} style={{ left: '6.5rem', right: '6.5rem' }} />}
+                  <div className="relative flex justify-center flex-wrap gap-3 px-2">
+                    {/* horizontal branch bar spans between the first and last card centres (card = 11rem wide) */}
+                    {many && <span className={`absolute top-0 h-px ${LINE}`} style={{ left: '5.5rem', right: '5.5rem' }} />}
                     {list.map(o => (
-                      <div key={o.id} className="relative w-52 pt-3">
+                      <div key={o.id} className="relative w-44 pt-3">
                         <span className={`absolute top-0 left-1/2 -translate-x-1/2 w-px h-3 ${LINE}`} />
                         <div className="card px-3 py-2 flex items-center gap-2.5 text-left hover:border-a-500/40 transition-colors">
                           <Avatar name={o.name} path={o.avatar_path} size={38} className={`ring-2 shrink-0 ${a.ring}`} />
                           <div className="min-w-0 flex-1">
                             <p className="text-[13px] font-semibold text-g-text leading-tight truncate" title={o.name}>{o.name}</p>
-                            <div className="flex items-center gap-1.5">
-                              <span className="font-mono text-[11px] text-a-400">{o.badge_no}</span>
-                              {o.status && o.status !== 'ACTIVE' && <span className="scale-90 origin-left"><StatusBadge v={o.status} /></span>}
-                            </div>
+                            <p className="font-mono text-[11px] text-a-400">{o.badge_no}</p>
                             {o.designation && <p className="text-[10px] text-g-muted truncate">{o.designation}</p>}
                           </div>
                         </div>
