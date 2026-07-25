@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
-import { PageHeader, Modal, Field, Spinner, Empty } from '../../components/ui'
+import { PageHeader, Modal, Field, Select, Spinner, Empty } from '../../components/ui'
 import { Megaphone, Plus, Pencil, Trash2, Pin, AlertCircle } from 'lucide-react'
 
 const BLANK = { title: '', body: '', category: 'Update', pinned: false }
@@ -92,8 +92,9 @@ export default function NewsPage() {
           <div className="grid grid-cols-2 gap-4">
             <Field label="Title" required><input value={form.title} onChange={e => f('title', e.target.value)} className="inp" placeholder="Headline" /></Field>
             <Field label="Category">
-              <input value={form.category} onChange={e => f('category', e.target.value)} className="inp" placeholder="Update" list="news-cats" />
-              <datalist id="news-cats">{['Update', 'Press Release', 'Recruitment', 'Public Safety', 'Event'].map(c => <option key={c} value={c} />)}</datalist>
+              <Select value={form.category} onChange={e => f('category', e.target.value)}>
+                {['Update', 'Press Release', 'Recruitment', 'Public Safety', 'Event'].map(c => <option key={c} value={c}>{c}</option>)}
+              </Select>
             </Field>
           </div>
           <Field label="Body" required><textarea value={form.body} onChange={e => f('body', e.target.value)} className="inp min-h-[140px] resize-y" placeholder="Write the announcement…" /></Field>
