@@ -1,24 +1,42 @@
 import { Link } from 'react-router-dom'
-import { BookOpen, PlayCircle, ArrowRight, GraduationCap, Network } from 'lucide-react'
+import { ArrowRight, GraduationCap, Network, Megaphone, Scale, HelpCircle, ShieldCheck } from 'lucide-react'
 
 const CARDS = [
   {
-    to: '/sop',
-    icon: BookOpen,
-    title: 'SOP Library',
-    desc: 'Standard Operating Procedures, guidelines and field protocols every officer should know.',
+    to: '/news',
+    icon: Megaphone,
+    title: 'News & Announcements',
+    desc: 'The latest press releases and official updates from the Zion City Police Department.',
   },
   {
-    to: '/training',
-    icon: PlayCircle,
-    title: 'Training Videos',
-    desc: 'Watch official ZCPD training material — patrol, procedure and tactics — at your own pace.',
+    to: '/join',
+    icon: GraduationCap,
+    title: 'Join ZCPD',
+    desc: 'Ready to serve? See the requirements and how to become a Zion City police officer.',
   },
   {
     to: '/roster',
     icon: Network,
     title: 'Chain of Command',
-    desc: 'See the ZCPD rank structure and the officers who serve at each level of the department.',
+    desc: 'The ZCPD rank structure and the officers who serve at each level of the department.',
+  },
+  {
+    to: '/divisions',
+    icon: Network,
+    title: 'Divisions & Units',
+    desc: 'Meet the specialised teams — Patrol, SWAT, Traffic, Investigations and more.',
+  },
+  {
+    to: '/services',
+    icon: Scale,
+    title: 'Citizen Services',
+    desc: 'Licenses, how to report a crime, request records or file a complaint.',
+  },
+  {
+    to: '/faq',
+    icon: HelpCircle,
+    title: 'FAQ',
+    desc: 'Know your rights and how to work with the ZCPD in common situations.',
   },
 ]
 
@@ -29,18 +47,18 @@ export default function HomePage() {
       <section className="py-16 sm:py-24 text-center">
         <img src="/logo.png" alt="ZCPD" className="w-20 h-20 object-contain mx-auto mb-6" />
         <p className="inline-flex items-center gap-1.5 text-xs font-semibold text-a-400 bg-a-500/10 border border-a-500/20 rounded-full px-3 py-1 mb-5">
-          <GraduationCap className="w-3.5 h-3.5" /> Probationary Officer Resources
+          <ShieldCheck className="w-3.5 h-3.5" /> Serving & Protecting Zion City
         </p>
         <h1 className="text-3xl sm:text-5xl font-bold text-g-text leading-tight mb-4">
           Zion City Police Department
         </h1>
         <p className="text-g-muted text-sm sm:text-base max-w-xl mx-auto mb-8">
-          Everything a probationary officer needs to get started — standard procedures and
-          training videos, freely available. No login required.
+          Official information for the citizens of Zion City — news, services and how to reach us.
+          Looking to serve? Learn how to join the force.
         </p>
         <div className="flex items-center justify-center gap-3">
-          <Link to="/sop" className="btn-primary"><BookOpen className="w-4 h-4" />Read the SOP</Link>
-          <Link to="/training" className="btn-ghost"><PlayCircle className="w-4 h-4" />Watch training</Link>
+          <Link to="/join" className="btn-primary"><GraduationCap className="w-4 h-4" />Join ZCPD</Link>
+          <Link to="/news" className="btn-ghost"><Megaphone className="w-4 h-4" />Latest news</Link>
         </div>
       </section>
 

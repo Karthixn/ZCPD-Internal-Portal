@@ -25,11 +25,16 @@ export default function PublicLayout({ children }) {
             </div>
           </Link>
 
-          <nav className="flex items-center gap-1 ml-2">
+          <nav className="flex items-center gap-1 ml-2 overflow-x-auto no-scrollbar">
             <Tab to="/" label="Home" />
+            <Tab to="/news" label="News" />
+            <Tab to="/join" label="Join" />
+            <Tab to="/roster" label="Command" />
+            <Tab to="/divisions" label="Divisions" />
+            <Tab to="/services" label="Services" />
+            <Tab to="/faq" label="FAQ" />
             <Tab to="/sop" label="SOP" />
             <Tab to="/training" label="Training" />
-            <Tab to="/roster" label="Command" />
           </nav>
         </div>
       </header>

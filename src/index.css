@@ -52,6 +52,8 @@
   .tbl tbody tr { @apply hover:bg-white/[0.02] transition-colors; }
 
   /* Misc */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   .label { @apply block text-xs font-medium text-g-sub uppercase tracking-wider mb-1.5; }
   .section-title { @apply text-xs font-semibold text-g-muted uppercase tracking-wider mb-3; }
   .page-title { @apply text-xl font-bold text-g-text; }

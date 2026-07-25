@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import {
   Shield, Users, Target, BookOpen, FileText,
   DollarSign, Crosshair, Settings, LogOut,
-  GraduationCap, TrendingUp, ChevronLeft, ChevronRight, Menu, PlayCircle, Network, UserCog
+  GraduationCap, TrendingUp, ChevronLeft, ChevronRight, Menu, PlayCircle, Network, UserCog, Megaphone
 } from 'lucide-react'
 import { RoleBadge } from '../ui'
 import Avatar from '../ui/Avatar'
@@ -40,6 +40,7 @@ export default function AppLayout({ children }) {
     { to:'/sop',        icon:BookOpen,      label:'SOP Library',  show:true  },
     { to:'/training',   icon:PlayCircle,    label:'Training',     show:true  },
     { to:'/roster',     icon:Network,       label:'Chain of Cmd', show:true  },
+    { to:'/news',       icon:Megaphone,     label:'News',         show:true  },
     { to:'/admin',      icon:Settings,      label:'Admin',        show:isFTC },
   ].filter(n => n.show)
 

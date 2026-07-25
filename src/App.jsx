@@ -8,6 +8,11 @@ import LoginPage    from './pages/auth/LoginPage'
 import HomePage     from './pages/public/HomePage'
 import TrainingPage from './pages/public/TrainingPage'
 import RosterPage   from './pages/public/RosterPage'
+import NewsPage      from './pages/public/NewsPage'
+import JoinPage      from './pages/public/JoinPage'
+import DivisionsPage from './pages/public/DivisionsPage'
+import ServicesPage  from './pages/public/ServicesPage'
+import FAQPage       from './pages/public/FAQPage'
 import ProfileSettingsPage from './pages/settings/ProfileSettingsPage'
 import Dashboard    from './pages/Dashboard'
 import OfficersPage from './pages/officers/OfficersPage'
@@ -61,9 +66,14 @@ export default function App() {
           <Route path="/login"   element={<LoginPage/>}/>
 
           {/* Public + internal (auth-aware layout) */}
-          <Route path="/sop"      element={<Auto><SOPPage/></Auto>}/>
-          <Route path="/training" element={<Auto><TrainingPage/></Auto>}/>
-          <Route path="/roster"   element={<Auto><RosterPage/></Auto>}/>
+          <Route path="/sop"       element={<Auto><SOPPage/></Auto>}/>
+          <Route path="/training"  element={<Auto><TrainingPage/></Auto>}/>
+          <Route path="/roster"    element={<Auto><RosterPage/></Auto>}/>
+          <Route path="/news"      element={<Auto><NewsPage/></Auto>}/>
+          <Route path="/join"      element={<Auto><JoinPage/></Auto>}/>
+          <Route path="/divisions" element={<Auto><DivisionsPage/></Auto>}/>
+          <Route path="/services"  element={<Auto><ServicesPage/></Auto>}/>
+          <Route path="/faq"       element={<Auto><FAQPage/></Auto>}/>
 
           {/* Internal-only */}
           <Route path="/dashboard" element={<L><Dashboard/></L>}/>
