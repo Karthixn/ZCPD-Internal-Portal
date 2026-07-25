@@ -81,31 +81,32 @@ export default function RosterPage() {
               return (
                 <div key={rank} className="flex flex-col items-center">
                   {/* spine connecting from the level above */}
-                  {li > 0 && <div className={`w-px h-7 ${LINE}`} />}
+                  {li > 0 && <div className={`w-px h-4 ${LINE}`} />}
 
                   {/* Rank pill */}
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-n-600 bg-n-800">
+                  <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full border border-n-600 bg-n-800">
                     <span className={`w-1.5 h-1.5 rounded-full ${a.bar}`} />
-                    <span className="text-xs font-bold uppercase tracking-wide text-g-text">{rank}</span>
-                    <span className={`text-xs font-semibold ${a.text}`}>{list.length}</span>
+                    <span className="text-[11px] font-bold uppercase tracking-wide text-g-text">{rank}</span>
+                    <span className={`text-[11px] font-semibold ${a.text}`}>{list.length}</span>
                   </div>
 
                   {/* drop from pill toward the cards */}
-                  <div className={`w-px h-5 ${LINE}`} />
+                  <div className={`w-px h-4 ${LINE}`} />
 
                   {/* Officer node row with branch connectors */}
-                  <div className="relative flex justify-center gap-5 px-2">
-                    {/* horizontal branch bar spans between the first and last card centres (card = 9rem wide) */}
-                    {many && <span className={`absolute top-0 h-px ${LINE}`} style={{ left: '4.5rem', right: '4.5rem' }} />}
+                  <div className="relative flex justify-center gap-4 px-2">
+                    {/* horizontal branch bar spans between the first and last card centres (card = 8rem wide) */}
+                    {many && <span className={`absolute top-0 h-px ${LINE}`} style={{ left: '4rem', right: '4rem' }} />}
                     {list.map(o => (
-                      <div key={o.id} className="relative w-36 pt-5">
-                        <span className={`absolute top-0 left-1/2 -translate-x-1/2 w-px h-5 ${LINE}`} />
-                        <div className="card px-3 py-3 flex flex-col items-center text-center hover:border-a-500/40 transition-colors">
-                          <Avatar name={o.name} path={o.avatar_path} size={48} className={`ring-2 ${a.ring}`} />
-                          <p className="text-xs font-semibold text-g-text mt-2 leading-tight w-full truncate" title={o.name}>{o.name}</p>
-                          {o.designation && <p className="text-[10px] text-g-muted truncate w-full">{o.designation}</p>}
-                          <p className="font-mono text-[11px] text-a-400 mt-1">{o.badge_no}</p>
-                          {o.status && o.status !== 'ACTIVE' && <div className="mt-1"><StatusBadge v={o.status} /></div>}
+                      <div key={o.id} className="relative w-32 pt-4">
+                        <span className={`absolute top-0 left-1/2 -translate-x-1/2 w-px h-4 ${LINE}`} />
+                        <div className="card p-2.5 flex flex-col items-center text-center hover:border-a-500/40 transition-colors">
+                          <Avatar name={o.name} path={o.avatar_path} size={40} className={`ring-2 ${a.ring}`} />
+                          <p className="text-[11px] font-semibold text-g-text mt-1.5 leading-tight w-full truncate" title={o.name}>{o.name}</p>
+                          <p className="font-mono text-[10px] text-a-400 mt-0.5">{o.badge_no}</p>
+                          {o.status && o.status !== 'ACTIVE'
+                            ? <div className="mt-1 scale-90"><StatusBadge v={o.status} /></div>
+                            : o.designation && <p className="text-[10px] text-g-muted truncate w-full mt-0.5">{o.designation}</p>}
                         </div>
                       </div>
                     ))}
