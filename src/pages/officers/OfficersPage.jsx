@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
-import { Users, Search, Plus, Download, Pencil, Trash2 } from 'lucide-react'
+import { Users, Search, Plus, Download, Pencil, Trash2, Upload } from 'lucide-react'
 import { PageHeader, StatusBadge, Select, Modal, Field, Spinner, Empty } from '../../components/ui'
+import Avatar from '../../components/ui/Avatar'
+
+const AV_BUCKET = 'avatars'
 
 const RANKS = ['All','Chief Of Police','DGP','ADGP','Commissioner','DIG','IG','SP','DYSP','CI','SI','ASI','HC','CPO','PO']
 const STATUSES = ['All','ACTIVE','INACTIVE','LEAVE','EXCEPTION','TERMINATED','RESIGNED']
@@ -83,6 +86,23 @@ export default function OfficersPage() {
   const [delModal, setDelModal] = useState(false)
   const [delTarget, setDelTarget] = useState(null)
   const f = (k, v) => setForm(p => ({ ...p, [k]: v }))
+
+  const fileRef = useRef(null)
+  const [photoBusy, setPhotoBusy] = useState(false)
+  async function onPhoto(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) { alert('Please choose an image file.'); return }
+    if (file.size > 3 * 1024 * 1024) { alert('Image must be under 3 MB.'); return }
+    setPhotoBusy(true)
+    const ext = file.name.split('.').pop()
+    const path = `officer-${editId || 'new'}-${Date.now()}.${ext}`
+    const { error } = await supabase.storage.from(AV_BUCKET).upload(path, file, { upsert: true, contentType: file.type })
+    if (error) { alert(error.message) }
+    else { if (form.avatar_path) supabase.storage.from(AV_BUCKET).remove([form.avatar_path]); f('avatar_path', path) }
+    setPhotoBusy(false)
+    if (fileRef.current) fileRef.current.value = ''
+  }
 
   async function deleteOfficer() {
     if (!delTarget) return
@@ -170,6 +190,21 @@ export default function OfficersPage() {
       {/* Add/Edit modal */}
       <Modal open={modal} onClose={()=>setModal(false)} title={editId?'Edit officer':'Add officer'} wide>
         <div className="grid grid-cols-2 gap-4">
+          {/* Photo */}
+          <div className="col-span-2 flex items-center gap-4 border-b border-n-600 pb-4">
+            <Avatar name={form.name} path={form.avatar_path} size={60} className="ring-2 ring-n-600 shrink-0"/>
+            <div>
+              <p className="text-sm font-medium text-g-text mb-1.5">Officer photo</p>
+              <div className="flex items-center gap-2">
+                <input ref={fileRef} type="file" accept="image/*" onChange={onPhoto} className="hidden"/>
+                <button type="button" onClick={()=>fileRef.current?.click()} disabled={photoBusy} className="btn-ghost">
+                  <Upload className="w-4 h-4"/>{photoBusy ? 'Uploading…' : form.avatar_path ? 'Change' : 'Upload'}
+                </button>
+                {form.avatar_path && <button type="button" onClick={()=>f('avatar_path',null)} className="text-sm px-3 py-2 rounded-lg border border-n-600 text-red-400 hover:bg-red-900/10 transition-colors">Remove</button>}
+              </div>
+              <p className="text-xs text-g-muted mt-1.5">Shown on the public Chain of Command. Max 3 MB.</p>
+            </div>
+          </div>
           <Field label="Full name" required><input value={form.name} onChange={e=>f('name',e.target.value)} className="inp" placeholder="Officer name"/></Field>
           <Field label="Badge no" required><input value={form.badge_no} onChange={e=>f('badge_no',e.target.value)} className="inp" placeholder="CP-118"/></Field>
           <Field label="Rank" required>
