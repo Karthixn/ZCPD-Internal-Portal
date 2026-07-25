@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import { PageHeader, Spinner, Empty } from '../../components/ui'
+import { PageHeader, Spinner, Empty, Modal, StatusBadge } from '../../components/ui'
 import Avatar from '../../components/ui/Avatar'
 import { Network, Users, Search, X } from 'lucide-react'
 
@@ -34,6 +34,7 @@ export default function RosterPage() {
   const [officers, setOfficers] = useState([])
   const [loading, setLoading]   = useState(true)
   const [query, setQuery]       = useState('')
+  const [selected, setSelected] = useState(null)
 
   useEffect(() => {
     (async () => {
@@ -106,14 +107,15 @@ export default function RosterPage() {
                     {list.map(o => (
                       <div key={o.id} className="relative w-44 pt-3">
                         <span className={`absolute top-0 left-1/2 -translate-x-1/2 w-px h-3 ${LINE}`} />
-                        <div className="card px-3 py-2 flex items-center gap-2.5 text-left hover:border-a-500/40 transition-colors">
+                        <button onClick={() => setSelected(o)}
+                          className="card px-3 py-2 w-full flex items-center gap-2.5 text-left hover:border-a-500/40 hover:bg-white/5 transition-colors">
                           <Avatar name={o.name} path={o.avatar_path} size={38} className={`ring-2 shrink-0 ${a.ring}`} />
                           <div className="min-w-0 flex-1">
                             <p className="text-[13px] font-semibold text-g-text leading-tight truncate" title={o.name}>{o.name}</p>
                             <p className="font-mono text-[11px] text-a-400">{o.badge_no}</p>
                             {o.designation && <p className="text-[10px] text-g-muted truncate">{o.designation}</p>}
                           </div>
-                        </div>
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -123,6 +125,21 @@ export default function RosterPage() {
           </div>
         </div>
       )}
+
+      {/* Officer detail popup */}
+      <Modal open={!!selected} onClose={() => setSelected(null)} title="Officer">
+        {selected && (
+          <div className="flex flex-col items-center text-center">
+            <Avatar name={selected.name} path={selected.avatar_path} size={96} className={`ring-2 ${ACCENT[tierOf(selected.rank)].ring} mb-4`} />
+            <h3 className="text-lg font-bold text-g-text">{selected.name}</h3>
+            <p className="text-sm text-g-muted">{selected.rank}{selected.designation ? ` · ${selected.designation}` : ''}</p>
+            <div className="flex items-center gap-2 mt-3">
+              <span className="font-mono text-sm text-a-400 bg-a-500/10 border border-a-500/20 rounded px-2 py-0.5">{selected.badge_no}</span>
+              {selected.status && <StatusBadge v={selected.status} />}
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }
