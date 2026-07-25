@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { FileText, Plus, Search, Eye, EyeOff, Globe } from 'lucide-react'
 import { PageHeader, Modal, Field, Select, Spinner, Empty } from '../../components/ui'
+import { useAuth } from '../../context/AuthContext'
 
 const TYPES = ['All','Incident Report','Case File','Confiscation Report','Notice','SOP Document','Other']
 const BLANK = { title:'', type:'Incident Report', description:'', officer_name:'', incident_date:'', reference_no:'', tags:'', is_public:false }
 
 export default function RecordsPage() {
+  const { isFTI } = useAuth()   // create/edit/publish is FTC/FTI only; POs are read-only
   const [records, setRecords]   = useState([])
   const [loading, setLoading]   = useState(true)
   const [modal, setModal]       = useState(false)
@@ -44,7 +46,7 @@ export default function RecordsPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-5">
       <PageHeader icon={FileText} title="Records" sub="Incident reports, case files & documents"
-        action={<button onClick={()=>{ setForm(BLANK); setModal(true)}} className="btn-primary"><Plus className="w-4 h-4"/>New record</button>}
+        action={isFTI && <button onClick={()=>{ setForm(BLANK); setModal(true)}} className="btn-primary"><Plus className="w-4 h-4"/>New record</button>}
       />
 
       <div className="flex flex-wrap gap-3">
@@ -77,10 +79,10 @@ export default function RecordsPage() {
                     <span>· {new Date(r.created_at).toLocaleDateString()}</span>
                   </div>
                 </div>
-                <button onClick={()=>togglePublic(r)} title={r.is_public?'Hide from public blotter':'Show on public blotter'}
+                {isFTI && <button onClick={()=>togglePublic(r)} title={r.is_public?'Hide from public blotter':'Show on public blotter'}
                   className={`shrink-0 inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border transition-colors ${r.is_public?'text-emerald-400 border-emerald-700/40 hover:bg-emerald-900/20':'text-g-muted border-n-600 hover:text-g-text hover:bg-white/5'}`}>
                   {r.is_public ? <><Eye className="w-3.5 h-3.5"/>Public</> : <><EyeOff className="w-3.5 h-3.5"/>Hidden</>}
-                </button>
+                </button>}
               </div>
             </div>
           ))}

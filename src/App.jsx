@@ -17,6 +17,7 @@ import BlotterPage   from './pages/public/BlotterPage'
 import ProfileSettingsPage from './pages/settings/ProfileSettingsPage'
 import Dashboard    from './pages/Dashboard'
 import OfficersPage from './pages/officers/OfficersPage'
+import MyStatusPage  from './pages/officers/MyStatusPage'
 import SwatPage     from './pages/swat/SwatPage'
 import FTOPortal    from './pages/fto/FTOPortal'
 import RecordsPage  from './pages/records/RecordsPage'
@@ -91,7 +92,8 @@ export default function App() {
           {/* FTO portal with nested routes */}
           <Route path="/fto/*"     element={<L roles={['ftc','fti','fto']}><FTOPortal/></L>}/>
 
-          <Route path="/records"   element={<L roles={['ftc','fti']}><RecordsPage/></L>}/>
+          <Route path="/records"   element={<L roles={['ftc','fti','officer']}><RecordsPage/></L>}/>
+          <Route path="/my-status" element={<L roles={['officer']}><MyStatusPage/></L>}/>
           <Route path="/weapons"   element={<L roles={['ftc','fti']}><WeaponsPage/></L>}/>
           <Route path="/salary"    element={<L roles={['ftc']}><SalaryPage/></L>}/>
           <Route path="/admin"     element={<L roles={['ftc']}><AdminPage/></L>}/>
