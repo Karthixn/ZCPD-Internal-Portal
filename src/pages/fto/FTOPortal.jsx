@@ -10,17 +10,19 @@ const BATCH_STATUS = ['IN PROGRESS','GRADUATED','FAILED','RESIGNED','REMOVED','Z
 const PHASE_OPTS   = ['NOT COMPLETED','IN PROGRESS','COMPLETED']
 const PERF_OPTS    = ['EXCELLENT','GOOD','AVERAGE','POOR']
 const CRITERIA = [
-  { key:'equip_uniform',   label:"Equipment & uniform" },
-  { key:'job_knowledge',   label:"Knowledge of job roles & responsibilities" },
-  { key:'traffic_citizen', label:"Traffic control & citizen interaction" },
-  { key:'radio_comms',     label:"Radio calls & communication skills" },
-  { key:'discipline',      label:"Discipline & professional conduct" },
-  { key:'case_handling',   label:"Case handling & problem-solving" },
-  { key:'teamwork',        label:"Team collaboration" },
-  { key:'initiative',      label:"Initiative and attitude" },
-  { key:'adaptability',    label:"Adaptability to protocols" },
-  { key:'time_mgmt',       label:"Time management" },
+  { key:'equip_uniform',   label:"Equipment & uniform",                     max:5 },
+  { key:'job_knowledge',   label:"Knowledge of job roles & responsibilities", max:5 },
+  { key:'traffic_citizen', label:"Traffic control & citizen interaction",    max:5 },
+  { key:'radio_comms',     label:"Radio calls & communication skills",       max:5 },
+  { key:'discipline',      label:"Discipline & professional conduct",        max:5 },
+  { key:'case_handling',   label:"Case handling & problem-solving",          max:5 },
+  { key:'teamwork',        label:"Team collaboration",                       max:5 },
+  { key:'initiative',      label:"Initiative and attitude",                  max:5 },
+  { key:'adaptability',    label:"Adaptability to protocols",                max:5 },
+  { key:'time_mgmt',       label:"Time management",                          max:5 },
+  { key:'sop',             label:"SOP knowledge",                            max:10 },
 ]
+const MAX_SCORE = CRITERIA.reduce((a, c) => a + c.max, 0)   // 60
 
 /* ═══════════════════════════════
    CADET LIST
@@ -179,7 +181,7 @@ function CadetDetail() {
   // Weekly report form
   const [repForm, setRepForm] = useState({ fto_name:officer?.name??'', week_number:1, duty_hrs:'', activities:'', performance:'GOOD', remarks:'' })
   // PO test form
-  const [potForm, setPotForm] = useState({ fto_name:officer?.name??'', fto_badge:officer?.badge_no??'', fto_designation:officer?.rank??'', test_date:'', equip_uniform:5, job_knowledge:5, traffic_citizen:5, radio_comms:5, discipline:5, case_handling:5, teamwork:5, initiative:5, adaptability:5, time_mgmt:5, recommendation:'PASSED', overall_remarks:'' })
+  const [potForm, setPotForm] = useState({ fto_name:officer?.name??'', fto_badge:officer?.badge_no??'', fto_designation:officer?.rank??'', test_date:'', equip_uniform:5, job_knowledge:5, traffic_citizen:5, radio_comms:5, discipline:5, case_handling:5, teamwork:5, initiative:5, adaptability:5, time_mgmt:5, sop:10, recommendation:'PASSED', overall_remarks:'' })
   // Training form
   const [trnForm, setTrnForm] = useState({ phase_number:1, batch_no:'', venue:'', training_date:'', time_start:'', time_end:'', training_given:'', summary:'' })
 
@@ -597,16 +599,16 @@ function CadetDetail() {
                   </div>
                   <div className="text-right">
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${p.recommendation==='PASSED'?'bg-green-900/40 text-green-300 border-green-700/40':'bg-red-900/40 text-red-300 border-red-700/40'}`}>{p.recommendation}</span>
-                    <p className="text-2xl font-bold font-mono text-a-400 mt-1">{total}<span className="text-sm text-g-muted">/50</span></p>
+                    <p className="text-2xl font-bold font-mono text-a-400 mt-1">{total}<span className="text-sm text-g-muted">/{MAX_SCORE}</span></p>
                   </div>
                 </div>
-                <ScoreBar score={total} max={50}/>
+                <ScoreBar score={total} max={MAX_SCORE}/>
                 <div className="grid grid-cols-2 gap-2 mt-4">
                   {CRITERIA.map(c => (
-                    <div key={c.key} className="flex items-center justify-between py-1">
+                    <div key={c.key} className="flex items-center justify-between py-1 gap-2">
                       <span className="text-xs text-g-muted">{c.label}</span>
-                      <div className="flex gap-0.5">
-                        {[1,2,3,4,5].map(n => <div key={n} className={`w-3 h-3 rounded-sm ${n<=(p[c.key]||0)?'bg-a-500':'bg-n-600'}`}/>)}
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="font-mono text-xs text-a-400">{p[c.key]||0}/{c.max}</span>
                       </div>
                     </div>
                   ))}
@@ -667,13 +669,13 @@ function CadetDetail() {
             <Field label="Badge no"><input value={potForm.fto_badge} onChange={e=>pf('fto_badge',e.target.value)} className="inp"/></Field>
             <Field label="Test date"><input type="date" value={potForm.test_date} onChange={e=>pf('test_date',e.target.value)} className="inp"/></Field>
           </div>
-          <p className="section-title">Criteria rating (1 = Poor, 5 = Excellent)</p>
+          <p className="section-title">Criteria rating (1 = Poor · SOP knowledge scored out of 10)</p>
           <div className="grid grid-cols-1 gap-2">
             {CRITERIA.map(c => (
-              <div key={c.key} className="flex items-center justify-between">
-                <span className="text-sm text-g-sub flex-1">{c.label}</span>
-                <div className="flex gap-1.5">
-                  {[1,2,3,4,5].map(n => (
+              <div key={c.key} className="flex items-center justify-between gap-3">
+                <span className="text-sm text-g-sub flex-1">{c.label}{c.max!==5 && <span className="text-xs text-g-muted"> (/{c.max})</span>}</span>
+                <div className="flex flex-wrap gap-1.5 justify-end">
+                  {Array.from({length:c.max}, (_,i)=>i+1).map(n => (
                     <button key={n} onClick={()=>pf(c.key,n)}
                       className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${parseInt(potForm[c.key])===n?'bg-a-500 text-white':'bg-n-800 border border-n-600 text-g-muted hover:border-a-500/40'}`}>{n}</button>
                   ))}
@@ -683,7 +685,7 @@ function CadetDetail() {
           </div>
           <div className="flex items-center justify-between p-3 bg-n-800 rounded-lg">
             <span className="font-medium text-g-text">Total score</span>
-            <span className="text-xl font-bold font-mono text-a-400">{CRITERIA.reduce((a,c)=>a+(parseInt(potForm[c.key])||0),0)}/50</span>
+            <span className="text-xl font-bold font-mono text-a-400">{CRITERIA.reduce((a,c)=>a+(parseInt(potForm[c.key])||0),0)}/{MAX_SCORE}</span>
           </div>
           <Field label="Recommendation">
             <Select value={potForm.recommendation} onChange={e=>pf('recommendation',e.target.value)}>
