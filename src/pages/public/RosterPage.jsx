@@ -12,6 +12,10 @@ const TIERS = [
 ]
 const RANK_ORDER = TIERS.flatMap(t => t.ranks)
 const rankIndex = (r) => { const i = RANK_ORDER.indexOf(r); return i === -1 ? RANK_ORDER.length : i }
+
+/* Only show this rank and everything below it (set to null to show all). */
+const START_RANK = 'ADGP'
+const startIdx = START_RANK ? RANK_ORDER.indexOf(START_RANK) : 0
 const tierOf = (rank) => TIERS.find(t => t.ranks.includes(rank))?.accent ?? 'slate'
 
 const ACCENT = {
@@ -41,9 +45,11 @@ export default function RosterPage() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    if (!q) return officers
-    return officers.filter(o =>
-      (`${o.name} ${o.rank} ${o.badge_no} ${o.designation || ''}`).toLowerCase().includes(q))
+    return officers.filter(o => {
+      if (rankIndex(o.rank) < startIdx) return false   // hide ranks above START_RANK
+      if (!q) return true
+      return (`${o.name} ${o.rank} ${o.badge_no} ${o.designation || ''}`).toLowerCase().includes(q)
+    })
   }, [officers, query])
 
   // Group by rank (seniority order); within a rank sort by badge number.
