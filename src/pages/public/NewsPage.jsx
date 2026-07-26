@@ -7,6 +7,25 @@ import { logActivity } from '../../lib/activity'
 
 const BLANK = { title: '', body: '', category: 'Update', pinned: false }
 const fmtDate = (s) => new Date(s).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+const URL_RE = /(https?:\/\/[^\s]+)/g
+
+function RichBody({ text }) {
+  return (
+    <p className="text-sm text-g-sub whitespace-pre-line leading-relaxed">
+      {text.split('\n').map((line, li) => (
+        <span key={li}>
+          {li > 0 && '\n'}
+          {line.split(URL_RE).map((part, i) =>
+            URL_RE.test(part)
+              ? <a key={i} href={part} target="_blank" rel="noopener noreferrer"
+                  className="text-a-400 underline underline-offset-2 hover:text-a-300 break-all">{part}</a>
+              : part
+          )}
+        </span>
+      ))}
+    </p>
+  )
+}
 
 export default function NewsPage() {
   const { isFTI, officer: me } = useAuth()
@@ -83,7 +102,7 @@ export default function NewsPage() {
                 )}
               </div>
               <h2 className="text-lg font-semibold text-g-text mb-1.5">{p.title}</h2>
-              <p className="text-sm text-g-sub whitespace-pre-line leading-relaxed">{p.body}</p>
+              <RichBody text={p.body} />
             </article>
           ))}
         </div>
