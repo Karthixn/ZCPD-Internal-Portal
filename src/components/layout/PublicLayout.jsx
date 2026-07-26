@@ -33,7 +33,11 @@ export default function PublicLayout({ children }) {
         </div>
       </header>
 
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 relative">
+        <img src="/logo.png" alt="" aria-hidden="true"
+          className="pointer-events-none select-none fixed inset-0 m-auto w-[420px] h-[420px] object-contain opacity-[0.03] z-0"/>
+        <div className="relative z-10">{children}</div>
+      </main>
 
       <footer className="border-t border-n-600 py-4">
         <p className="text-center text-xs text-g-muted">© Zion City Police Department · All rights reserved</p>

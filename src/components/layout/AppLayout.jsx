@@ -116,7 +116,11 @@ export default function AppLayout({ children }) {
           <div className="flex items-center gap-2"><img src="/logo.png" alt="ZCPD" className="w-6 h-6 object-contain"/><span className="text-sm font-semibold">ZCPD</span></div>
           <RoleBadge v={role}/>
         </div>
-        <main className="flex-1 overflow-y-auto p-5 lg:p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto p-5 lg:p-6 relative">
+          <img src="/logo.png" alt="" aria-hidden="true"
+            className="pointer-events-none select-none fixed inset-0 m-auto w-[420px] h-[420px] object-contain opacity-[0.03] z-0"/>
+          <div className="relative z-10">{children}</div>
+        </main>
       </div>
     </div>
   )
