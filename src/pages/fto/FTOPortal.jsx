@@ -117,10 +117,7 @@ function CadetList() {
 ═══════════════════════════════ */
 function NewCadetForm() {
   const navigate = useNavigate()
-  const { officer } = useAuth()
-  const [form, setForm] = useState({
-    name:'', discord_username:'', badge_no:'', batch_no:'', joining_date:'', assigned_fto: officer?.name??'', referred_by:'',
-  })
+  const [form, setForm] = useState({ name:'', discord_username:'' })
   const [saving, setSaving] = useState(false)
   const f = (k,v) => setForm(p=>({...p,[k]:v}))
 
@@ -138,22 +135,15 @@ function NewCadetForm() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-5">
-      <PageHeader icon={Plus} title="New cadet application" sub="Enter basic cadet details to start the pipeline"/>
+    <div className="max-w-lg mx-auto space-y-5">
+      <PageHeader icon={Plus} title="New cadet application" sub="Enter the applicant's name and Discord to open their record"/>
       <div className="card p-6 space-y-5">
-        <p className="section-title">Basic information</p>
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Full name" required><input value={form.name} onChange={e=>f('name',e.target.value)} className="inp" placeholder="Cadet name"/></Field>
-          <Field label="Discord username"><input value={form.discord_username} onChange={e=>f('discord_username',e.target.value)} className="inp" placeholder="username#1234"/></Field>
-          <Field label="Badge no"><input value={form.badge_no} onChange={e=>f('badge_no',e.target.value)} className="inp" placeholder="P61"/></Field>
-          <Field label="Batch no"><input type="number" value={form.batch_no} onChange={e=>f('batch_no',e.target.value)} className="inp" placeholder="4"/></Field>
-          <Field label="Joining date"><input type="date" value={form.joining_date} onChange={e=>f('joining_date',e.target.value)} className="inp"/></Field>
-          <Field label="Assigned FTO"><input value={form.assigned_fto} onChange={e=>f('assigned_fto',e.target.value)} className="inp" placeholder="FTO name"/></Field>
-          <Field label="Referred by"><input value={form.referred_by} onChange={e=>f('referred_by',e.target.value)} className="inp" placeholder="Officer who referred"/></Field>
-        </div>
-        <div className="flex gap-3 justify-end pt-2">
+        <Field label="Full name" required><input value={form.name} onChange={e=>f('name',e.target.value)} className="inp" placeholder="Cadet full name" autoFocus/></Field>
+        <Field label="Discord username"><input value={form.discord_username} onChange={e=>f('discord_username',e.target.value)} className="inp" placeholder="username or username#1234"/></Field>
+        <p className="text-xs text-g-muted">Badge, batch, joining date and FTO can be added after the record is created.</p>
+        <div className="flex gap-3 justify-end pt-1">
           <button onClick={()=>navigate('/fto')} className="btn-ghost">Cancel</button>
-          <button onClick={save} disabled={saving||!form.name.trim()} className="btn-primary">{saving?'Saving…':'Create cadet record'}</button>
+          <button onClick={save} disabled={saving||!form.name.trim()} className="btn-primary">{saving?'Creating…':'Create cadet record'}</button>
         </div>
       </div>
     </div>
@@ -241,6 +231,17 @@ function CadetDetail() {
   const [stageForm, setStageForm] = useState({})
   const [stageSaving, setStageSaving] = useState(false)
   const sf = (k,v) => setStageForm(p=>({...p,[k]:v}))
+
+  function openAppEdit() {
+    setStageForm({ badge_no: cadet.badge_no||'', batch_no: cadet.batch_no||'', joining_date: cadet.joining_date||'', assigned_fto: cadet.assigned_fto||'', referred_by: cadet.referred_by||'' })
+    setStageEdit('application')
+  }
+
+  async function saveAppEdit() {
+    setStageSaving(true)
+    await supabase.from('cadet_applications').update({ ...stageForm, batch_no: stageForm.batch_no ? parseInt(stageForm.batch_no) : null }).eq('id', id)
+    setStageSaving(false); setStageEdit(null); load()
+  }
 
   function currentStage() {
     if (!cadet.discord_interview_done) return 'discord'
@@ -353,27 +354,48 @@ function CadetDetail() {
             </div>
           </div>
 
-          {/* Stage 1: Application (always visible, read-only summary) */}
+          {/* Stage 1: Application */}
           <div className="card p-5">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 text-green-400"/>
                 <h3 className="font-semibold text-g-text">Stage 1 — Application</h3>
               </div>
-              <span className="s-active text-xs">COMPLETED</span>
+              <div className="flex items-center gap-2">
+                <span className="s-active text-xs">COMPLETED</span>
+                {stageEdit !== 'application' && (
+                  <button onClick={openAppEdit} className="btn-ghost text-xs px-2 py-1"><Edit3 className="w-3 h-3"/>Edit</button>
+                )}
+              </div>
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-              {[
-                ['Name', cadet.name], ['Badge', cadet.badge_no], ['Batch', cadet.batch_no ? `Batch ${cadet.batch_no}` : '—'],
-                ['Discord', cadet.discord_username], ['Joining date', cadet.joining_date], ['FTO', cadet.assigned_fto],
-                ['Referred by', cadet.referred_by],
-              ].map(([l,v]) => (
-                <div key={l}>
-                  <p className="text-xs text-g-muted">{l}</p>
-                  <p className="text-sm text-g-text font-medium">{v||'—'}</p>
+            {stageEdit === 'application' ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Badge no"><input value={stageForm.badge_no} onChange={e=>sf('badge_no',e.target.value)} className="inp" placeholder="P61"/></Field>
+                  <Field label="Batch no"><input type="number" value={stageForm.batch_no} onChange={e=>sf('batch_no',e.target.value)} className="inp" placeholder="5"/></Field>
+                  <Field label="Joining date"><input type="date" value={stageForm.joining_date} onChange={e=>sf('joining_date',e.target.value)} className="inp"/></Field>
+                  <Field label="Assigned FTO"><input value={stageForm.assigned_fto} onChange={e=>sf('assigned_fto',e.target.value)} className="inp" placeholder="FTO name"/></Field>
+                  <Field label="Referred by"><input value={stageForm.referred_by} onChange={e=>sf('referred_by',e.target.value)} className="inp" placeholder="Officer who referred"/></Field>
                 </div>
-              ))}
-            </div>
+                <div className="flex gap-2 justify-end">
+                  <button onClick={()=>setStageEdit(null)} className="btn-ghost text-xs">Cancel</button>
+                  <button onClick={saveAppEdit} disabled={stageSaving} className="btn-primary text-xs"><Save className="w-3 h-3"/>{stageSaving?'Saving…':'Save'}</button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                {[
+                  ['Name', cadet.name], ['Badge', cadet.badge_no], ['Batch', cadet.batch_no ? `Batch ${cadet.batch_no}` : '—'],
+                  ['Discord', cadet.discord_username], ['Joining date', cadet.joining_date], ['FTO', cadet.assigned_fto],
+                  ['Referred by', cadet.referred_by],
+                ].map(([l,v]) => (
+                  <div key={l}>
+                    <p className="text-xs text-g-muted">{l}</p>
+                    <p className="text-sm text-g-text font-medium">{v||'—'}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Stage 2: Discord Interview */}
