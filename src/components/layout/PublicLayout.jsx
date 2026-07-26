@@ -23,7 +23,7 @@ export default function PublicLayout({ children }) {
             <img src="/logo.png" alt="ZCPD" className="w-8 h-8 object-contain" />
             <div className="leading-tight hidden sm:block">
               <p className="text-xs font-bold text-g-text tracking-wider">ZCPD</p>
-              <p className="text-[10px] text-g-muted">Officer Resources</p>
+              <p className="text-[10px] text-g-muted">Zion City Police</p>
             </div>
           </Link>
 
@@ -36,7 +36,7 @@ export default function PublicLayout({ children }) {
       <main className="flex-1">{children}</main>
 
       <footer className="border-t border-n-600 py-4">
-        <p className="text-center text-xs text-g-muted">© Zion City Police Department · Internal Systems</p>
+        <p className="text-center text-xs text-g-muted">© Zion City Police Department · All rights reserved</p>
       </footer>
     </div>
   )
