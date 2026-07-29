@@ -34,7 +34,15 @@ function CadetList() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [statusF, setStatusF] = useState('All')
+  const [pipeF, setPipeF] = useState('All')
   const [deleting, setDeleting] = useState(null)
+
+  function pipeStage(c) {
+    if (c.roles_given_date) return 'Onboarding'
+    if (c.ingame_interview_done) return 'Onboarding'
+    if (c.discord_interview_done) return 'In-game'
+    return 'Discord'
+  }
 
   function loadCadets() {
     supabase.from('cadet_applications').select('*').order('created_at',{ascending:false})
@@ -52,8 +60,10 @@ function CadetList() {
     loadCadets()
   }
 
+  const PIPE_STAGES = ['All','Discord','In-game','Onboarding']
   const shown = cadets.filter(c =>
     (statusF==='All' || c.status===statusF) &&
+    (pipeF==='All' || pipeStage(c)===pipeF) &&
     (!search || c.name?.toLowerCase().includes(search.toLowerCase()) || c.badge_no?.includes(search))
   )
 
@@ -63,12 +73,23 @@ function CadetList() {
         action={isFTO && <button onClick={()=>navigate('/fto/new-cadet')} className="btn-primary"><Plus className="w-4 h-4"/>Add cadet</button>}
       />
 
-      {/* Tabs */}
+      {/* Status tabs */}
       <div className="flex gap-2 flex-wrap">
         {['All',...BATCH_STATUS].map(s => (
           <button key={s} onClick={()=>setStatusF(s)}
             className={`text-xs font-medium px-3 py-1 rounded-full border transition-colors ${statusF===s?'bg-a-500/20 border-a-500/40 text-a-400':'bg-n-700 border-n-600 text-g-muted hover:text-g-text'}`}>
             {s} <span className="font-mono">{s==='All'?cadets.length:cadets.filter(c=>c.status===s).length}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Pipeline stage filter */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-xs text-g-muted font-medium">Pipeline:</span>
+        {PIPE_STAGES.map(s => (
+          <button key={s} onClick={()=>setPipeF(s)}
+            className={`text-xs font-medium px-3 py-1 rounded-full border transition-colors ${pipeF===s?'bg-purple-500/20 border-purple-500/40 text-purple-400':'bg-n-700 border-n-600 text-g-muted hover:text-g-text'}`}>
+            {s} <span className="font-mono">{s==='All'?cadets.length:cadets.filter(c=>pipeStage(c)===s).length}</span>
           </button>
         ))}
       </div>
