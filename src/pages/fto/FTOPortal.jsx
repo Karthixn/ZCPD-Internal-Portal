@@ -82,14 +82,31 @@ function CadetList() {
         {loading ? <div className="p-12 flex justify-center"><Spinner className="w-6 h-6"/></div>
         : shown.length===0 ? <Empty icon={GraduationCap} title="No cadets found" desc="Add a new cadet application to get started."/>
         : <table className="tbl">
-            <thead><tr><th>Name</th><th>Badge</th><th>Batch</th><th>FTO</th><th>Phase 1</th><th>Phase 2</th><th>Phase 3</th><th>PO Test</th><th>Status</th><th></th></tr></thead>
+            <thead><tr><th>Name</th><th>Badge</th><th>Batch</th><th>FTO</th><th>Pipeline</th><th>Phase 1</th><th>Phase 2</th><th>Phase 3</th><th>PO Test</th><th>Status</th><th></th></tr></thead>
             <tbody>
-              {shown.map(c => (
+              {shown.map(c => {
+                const pip = [
+                  { label:'App',     done: true },
+                  { label:'Discord', done: c.discord_interview_done, fail: c.discord_interview_pass === false },
+                  { label:'Ingame',  done: c.ingame_interview_done,  fail: c.ingame_interview_pass === false },
+                  { label:'Onboard', done: !!c.roles_given_date },
+                ]
+                return (
                 <tr key={c.id} className="cursor-pointer" onClick={()=>navigate(`/fto/cadet/${c.id}`)}>
                   <td className="font-medium text-g-text">{c.name}</td>
                   <td className="font-mono text-xs text-a-400">{c.badge_no||'—'}</td>
                   <td className="text-xs text-g-muted">{c.batch_no ? `Batch ${c.batch_no}` : '—'}</td>
                   <td className="text-xs text-g-sub">{c.assigned_fto||'—'}</td>
+                  <td>
+                    <div className="flex items-center gap-0.5">
+                      {pip.map((s,i) => (
+                        <div key={i} className="flex items-center gap-0.5">
+                          <span className={`inline-block text-[9px] font-semibold px-1.5 py-0.5 rounded ${s.fail?'bg-red-900/40 text-red-400':s.done?'bg-green-900/40 text-green-400':'bg-n-700 text-g-muted'}`}>{s.label}</span>
+                          {i < pip.length-1 && <span className="text-n-600 text-[9px]">›</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </td>
                   <td><PhasePill v={c.phase1_status}/></td>
                   <td><PhasePill v={c.phase2_status}/></td>
                   <td><PhasePill v={c.phase3_status}/></td>
@@ -103,7 +120,7 @@ function CadetList() {
                     <ChevronRight className="w-4 h-4 text-g-muted"/>
                   </td>
                 </tr>
-              ))}
+              )})}
             </tbody>
           </table>
         }
@@ -233,7 +250,7 @@ function CadetDetail() {
   const sf = (k,v) => setStageForm(p=>({...p,[k]:v}))
 
   function openAppEdit() {
-    setStageForm({ badge_no: cadet.badge_no||'', batch_no: cadet.batch_no||'', joining_date: cadet.joining_date||'', assigned_fto: cadet.assigned_fto||'', referred_by: cadet.referred_by||'' })
+    setStageForm({ name: cadet.name||'', discord_username: cadet.discord_username||'', badge_no: cadet.badge_no||'', batch_no: cadet.batch_no||'', joining_date: cadet.joining_date||'', assigned_fto: cadet.assigned_fto||'', referred_by: cadet.referred_by||'' })
     setStageEdit('application')
   }
 
@@ -371,6 +388,8 @@ function CadetDetail() {
             {stageEdit === 'application' ? (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
+                  <Field label="Full name" required><input value={stageForm.name} onChange={e=>sf('name',e.target.value)} className="inp" placeholder="Cadet name"/></Field>
+                  <Field label="Discord username"><input value={stageForm.discord_username} onChange={e=>sf('discord_username',e.target.value)} className="inp" placeholder="username#1234"/></Field>
                   <Field label="Badge no"><input value={stageForm.badge_no} onChange={e=>sf('badge_no',e.target.value)} className="inp" placeholder="P61"/></Field>
                   <Field label="Batch no"><input type="number" value={stageForm.batch_no} onChange={e=>sf('batch_no',e.target.value)} className="inp" placeholder="5"/></Field>
                   <Field label="Joining date"><input type="date" value={stageForm.joining_date} onChange={e=>sf('joining_date',e.target.value)} className="inp"/></Field>
