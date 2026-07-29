@@ -53,13 +53,19 @@ serve(async (req) => {
       });
     }
 
+    // Delete profile first (FK constraint)
     await supabaseAdmin.from("profiles").delete().eq("id", user_id);
-    const { error } = await supabaseAdmin.auth.admin.deleteUser(user_id);
 
+    // Try admin API first, fall back to direct table delete for SQL-created users
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(user_id);
     if (error) {
-      return new Response(JSON.stringify({ error: error.message }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      // Fallback: delete directly from auth.users (works for users created via raw SQL)
+      const { error: sqlErr } = await supabaseAdmin.rpc('delete_auth_user', { uid: user_id });
+      if (sqlErr) {
+        return new Response(JSON.stringify({ error: sqlErr.message }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     return new Response(JSON.stringify({ success: true }), {
