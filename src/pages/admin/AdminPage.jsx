@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import { Settings, Plus, Users, Shield, AlertCircle, Pencil, Trash2 } from 'lucide-react'
+import { Settings, Plus, Users, Shield, AlertCircle, Pencil, Trash2, KeyRound } from 'lucide-react'
 import { PageHeader, RoleBadge, Modal, Field, Select, Spinner, Empty, StatCard } from '../../components/ui'
 
 const ROLES = ['ftc','fti','fto','swat','officer']
@@ -17,6 +17,10 @@ export default function AdminPage() {
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [form, setForm]         = useState(BLANK_USER)
   const [editForm, setEditForm] = useState({ role:'officer', officer_id:'', is_active:true })
+  const [credModal, setCredModal] = useState(false)
+  const [credTarget, setCredTarget] = useState(null)
+  const [credForm, setCredForm] = useState({ email:'', password:'' })
+  const cf = (k,v) => setCredForm(p=>({...p,[k]:v}))
   const [saving, setSaving]     = useState(false)
   const [err, setErr]           = useState('')
   const f = (k,v) => setForm(p=>({...p,[k]:v}))
@@ -69,6 +73,22 @@ export default function AdminPage() {
       is_active: editForm.is_active,
     }).eq('id', editTarget.id)
     setSaving(false); setEditModal(false); load()
+  }
+
+  function openCred(p) {
+    setCredTarget(p)
+    setCredForm({ email: p.email||'', password:'' })
+    setErr('')
+    setCredModal(true)
+  }
+
+  async function saveCred() {
+    setErr(''); setSaving(true)
+    const res = await supabase.functions.invoke('update-user-credentials', {
+      body: { user_id: credTarget.id, email: credForm.email||undefined, password: credForm.password||undefined },
+    })
+    if (res.error || res.data?.error) { setErr(res.data?.error || res.error.message); setSaving(false); return }
+    setSaving(false); setCredModal(false); load()
   }
 
   function openDelete(p) {
@@ -126,8 +146,11 @@ export default function AdminPage() {
                   </td>
                   <td>
                     <div className="flex items-center gap-1">
-                      <button onClick={()=>openEdit(p)} className="text-xs px-2 py-1 rounded border border-n-600 text-a-400 hover:bg-a-500/10 transition-colors" title="Edit">
+                      <button onClick={()=>openEdit(p)} className="text-xs px-2 py-1 rounded border border-n-600 text-a-400 hover:bg-a-500/10 transition-colors" title="Edit role / officer">
                         <Pencil className="w-3 h-3"/>
+                      </button>
+                      <button onClick={()=>openCred(p)} className="text-xs px-2 py-1 rounded border border-n-600 text-amber-400 hover:bg-amber-900/20 transition-colors" title="Change email / password">
+                        <KeyRound className="w-3 h-3"/>
                       </button>
                       <button onClick={()=>openDelete(p)} className="text-xs px-2 py-1 rounded border border-n-600 text-red-400 hover:bg-red-900/20 transition-colors" title="Delete">
                         <Trash2 className="w-3 h-3"/>
@@ -189,6 +212,20 @@ export default function AdminPage() {
         <div className="flex gap-3 mt-5 justify-end">
           <button onClick={()=>setEditModal(false)} className="btn-ghost">Cancel</button>
           <button onClick={saveEdit} disabled={saving} className="btn-primary">{saving?'Saving…':'Save changes'}</button>
+        </div>
+      </Modal>
+
+      {/* Change credentials modal */}
+      <Modal open={credModal} onClose={()=>setCredModal(false)} title={`Change credentials — ${credTarget?.email || ''}`}>
+        <div className="space-y-4">
+          <p className="text-xs text-g-muted">Leave a field blank to keep it unchanged.</p>
+          <Field label="New email address"><input type="email" value={credForm.email} onChange={e=>cf('email',e.target.value)} className="inp" placeholder="new@zcpd.internal"/></Field>
+          <Field label="New password"><input type="password" value={credForm.password} onChange={e=>cf('password',e.target.value)} className="inp" placeholder="Min 6 characters"/></Field>
+          {err && <div className="flex items-center gap-2 bg-red-900/20 border border-red-700/40 rounded-lg px-3 py-2.5"><AlertCircle className="w-4 h-4 text-red-400 shrink-0"/><p className="text-red-400 text-sm">{err}</p></div>}
+        </div>
+        <div className="flex gap-3 mt-5 justify-end">
+          <button onClick={()=>setCredModal(false)} className="btn-ghost">Cancel</button>
+          <button onClick={saveCred} disabled={saving||(!credForm.email&&!credForm.password)} className="btn-primary">{saving?'Saving…':'Update credentials'}</button>
         </div>
       </Modal>
 
