@@ -27,12 +27,8 @@ serve(async (req) => {
       });
     }
 
-    const supabaseCaller = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!
-    );
     const { data: { user: caller }, error: authError } =
-      await supabaseCaller.auth.getUser(authHeader.replace("Bearer ", ""));
+      await supabaseAdmin.auth.getUser(authHeader.replace("Bearer ", ""));
 
     if (authError || !caller) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
