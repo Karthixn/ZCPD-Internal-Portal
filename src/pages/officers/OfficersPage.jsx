@@ -153,14 +153,16 @@ export default function OfficersPage() {
             <table className="tbl">
               <thead>
                 <tr>
-                  {['#','Name','Rank','Badge','Status','Duty Hrs','Last Promo','Next Promo','Months','Eligibility','Remarks',''].map(h => <th key={h}>{h}</th>)}
+                  <th className="sticky left-0 z-10 bg-n-700">#</th>
+                  <th className="sticky left-8 z-10 bg-n-700">Name</th>
+                  {['Rank','Badge','Status','Duty Hrs','Last Promo','Next Promo','Months','Eligibility','Remarks',''].map(h => <th key={h}>{h}</th>)}
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((o, i) => (
                   <tr key={o.id}>
-                    <td className="text-g-muted text-xs font-mono w-8">{i+1}</td>
-                    <td className="font-medium text-g-text whitespace-nowrap">{o.name}</td>
+                    <td className="sticky left-0 z-10 bg-n-700 text-g-muted text-xs font-mono w-8">{i+1}</td>
+                    <td className="sticky left-8 z-10 bg-n-700 font-medium text-g-text whitespace-nowrap">{o.name}</td>
                     <td className="text-g-sub whitespace-nowrap">{o.rank}</td>
                     <td className="font-mono text-xs text-a-400">{o.badge_no}</td>
                     <td><StatusBadge v={o.status}/></td>
