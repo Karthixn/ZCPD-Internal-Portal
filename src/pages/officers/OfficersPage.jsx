@@ -52,7 +52,15 @@ export default function OfficersPage() {
 
   async function load() {
     setLoading(true)
-    const { data } = await supabase.from('officers').select('*').order('id')
+    const RANK_ORDER = ['Chief Of Police','DGP','ADGP','Commissioner','IG','DIG','SP','DYSP','CI','SI','ASI','HC','CPO','PO']
+    const { data } = await supabase.from('officers').select('*')
+    data?.sort((a, b) => {
+      const ai = RANK_ORDER.findIndex(r => r.toLowerCase() === (a.rank||'').toLowerCase())
+      const bi = RANK_ORDER.findIndex(r => r.toLowerCase() === (b.rank||'').toLowerCase())
+      const rankDiff = (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
+      if (rankDiff !== 0) return rankDiff
+      return (a.name||'').localeCompare(b.name||'')
+    })
     setOfficers(data ?? [])
     setLoading(false)
   }
